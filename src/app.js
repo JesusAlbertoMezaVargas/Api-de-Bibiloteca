@@ -1,4 +1,5 @@
 'use strict';
+const path = require('node:path');
 const express = require('express');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
@@ -38,6 +39,9 @@ function createApp(overrides = {}) {
       },
     },
   }));
+
+  // Frontend (HTML/CSS/JS con módulos ES) servido desde el mismo origen que la API.
+  app.use(express.static(path.join(__dirname, '..', 'public')));
 
   app.use(express.json({ limit: '10kb' }));
   app.use(cookieParser());

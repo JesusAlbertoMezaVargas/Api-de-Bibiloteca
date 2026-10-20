@@ -121,3 +121,18 @@ test('El límite global de la API responde 429 al excederse', async () => {
   assert.equal((await res.json()).error.code, 'DEMASIADOS_INTENTOS');
   await cerrar();
 });
+
+test('El frontend se sirve desde / con sus módulos ES y la misma política de seguridad', async () => {
+  const { pedir, cerrar } = await iniciar();
+  const pagina = await pedir('/');
+  const htmlTexto = await pagina.text();
+  assert.equal(pagina.status, 200);
+  assert.match(pagina.headers.get('content-type'), /text\/html/);
+  assert.match(htmlTexto, /<script type="module" src="js\/main.js"><\/script>/);
+  assert.ok(pagina.headers.get('content-security-policy').includes("script-src 'self'"));
+
+  const modulo = await pedir('/js/main.js');
+  assert.equal(modulo.status, 200);
+  assert.match(modulo.headers.get('content-type'), /javascript/);
+  await cerrar();
+});

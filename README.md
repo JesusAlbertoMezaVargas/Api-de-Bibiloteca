@@ -46,8 +46,21 @@ src/
     api.js               contrato de endpoints (501 hasta implementar)
   redis.js               conexión opcional a Redis y estado para /api/health
   schemas/index.js       esquemas de validación de cada endpoint
+public/                  frontend (HTML5, CSS3 y JavaScript con módulos ES, sin compilador)
+  index.html             estructura base, navegación y región de avisos
+  css/styles.css         diseño móvil primero; barra inferior en móvil y menú superior en escritorio
+  js/main.js             punto de entrada: preferencias, sesión y rutas
+  js/router.js           enrutador por hash (#/areas, #/areas/:id, #/acceso?codigo=...)
+  js/api.js              cliente de la API con el formato uniforme de error
+  js/estado.js           preferencias de accesibilidad y usuario en sesión
+  js/ui.js, html.js      plantillas seguras, avisos y errores de formulario
+  js/validacion.js       mismas reglas que src/schemas en el navegador
+  js/vistas/             inicio, áreas, guía del área, acceso QR, ajustes, cuenta, registro, 404
 test/api.test.js         pruebas de aceptación del esqueleto
 ```
+
+El frontend se abre en <http://localhost:3000/>. Mientras un endpoint responda `501`, su vista muestra
+"Esta sección todavía está en construcción" en lugar de fallar.
 
 ## Formato de error (todas las respuestas de error)
 

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Biblioteca de la Alameda, Tepic: áreas, guías de servicios y ajustes de lectura.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111a24" media="(prefers-color-scheme: dark)">
+  <title>Biblioteca de la Alameda</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231d4f80'/%3E%3Cpath d='M8 10.5c2.7-1.3 5.3-1.3 8 0 2.7-1.3 5.3-1.3 8 0V23c-2.7-1.3-5.3-1.3-8 0-2.7-1.3-5.3-1.3-8 0z' fill='none' stroke='%23fff' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M16 10.5V23' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <!-- Iconos (trazo de 24 × 24). Se usan con <svg><use href="#i-nombre"></use></svg> -->
+  <svg xmlns="http://www.w3.org/2000/svg" hidden>
+    <symbol id="i-logo" viewBox="0 0 24 24"><path d="M3 6.5c3-1.5 6-1.5 9 0 3-1.5 6-1.5 9 0V19c-3-1.5-6-1.5-9 0-3-1.5-6-1.5-9 0z"/><path d="M12 6.5V19"/></symbol>
+    <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v12h14V9"/><path d="M10 21v-6h4v6"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9 4 3 6.5V20l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20.5h.01M17.5 17.5H21V21h-3.5z"/></symbol>
+    <symbol id="i-ajustes" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+    <symbol id="i-cuenta" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-ubicacion" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+    <symbol id="i-flecha-izq" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></symbol>
+    <symbol id="i-flecha-der" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-altavoz" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9.5 9.5 0 0 1 0 13"/></symbol>
+    <symbol id="i-detener" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="i-alerta" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/></symbol>
+    <symbol id="i-exito" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16 9.5"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5h.01"/></symbol>
+    <symbol id="i-salir" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  </svg>
+
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+  <header class="barra">
+    <div class="barra__interior">
+      <a class="marca" href="#/" aria-label="Biblioteca de la Alameda, inicio">
+        <span class="marca__logo"><svg class="icono" aria-hidden="true"><use href="#i-logo"></use></svg></span>
+        <span class="marca__texto">
+          <span class="marca__nombre">Biblioteca de la Alameda</span>
+          <span class="marca__lugar">Tepic, Nayarit</span>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="Principal">
+        <ul class="nav__lista">
+          <li><a class="nav__enlace" href="#/" data-ruta="/"><svg class="icono" aria-hidden="true"><use href="#i-inicio"></use></svg><span>Inicio</span></a></li>
+          <li><a class="nav__enlace" href="#/areas" data-ruta="/areas"><svg class="icono" aria-hidden="true"><use href="#i-mapa"></use></svg><span>Áreas</span></a></li>
+          <li><a class="nav__enlace" href="#/acceso" data-ruta="/acceso"><svg class="icono" aria-hidden="true"><use href="#i-qr"></use></svg><span>Acceso QR</span></a></li>
+          <li><a class="nav__enlace" href="#/preferencias" data-ruta="/preferencias"><svg class="icono" aria-hidden="true"><use href="#i-ajustes"></use></svg><span>Ajustes</span></a></li>
+          <li><a class="nav__enlace" href="#/cuenta" data-ruta="/cuenta"><svg class="icono" aria-hidden="true"><use href="#i-cuenta"></use></svg><span>Cuenta</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido" class="pagina" tabindex="-1">
+    <noscript><p class="alerta alerta--error">Esta página necesita JavaScript activado.</p></noscript>
+  </main>
+
+  <div id="avisos" class="avisos" role="status" aria-live="polite"></div>
+
+  <footer class="pie">
+    <div class="pie__interior">
+      <p>Biblioteca de la Alameda · Tepic, Nayarit</p>
+      <p>Taller Full Stack · Instituto Tecnológico de Tepic</p>
+    </div>
+  </footer>
+</body>
+</html>
