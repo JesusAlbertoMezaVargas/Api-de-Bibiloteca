@@ -2,11 +2,7 @@
 const { AppError } = require('../errors');
 
 //  02: validación de parámetros (params, query y body) con zod → 400 VALIDACION
-/**
- * Valida params, query y body con esquemas de zod.
- * Si todo es correcto, los valores ya convertidos quedan en req.valid.{params,query,body}.
- * Si no, responde 400 VALIDACION con la lista de campos incorrectos.
- */
+
 function validate(schemas) {
   return (req, res, next) => {
     const valid = {};

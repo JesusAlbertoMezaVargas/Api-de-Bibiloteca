@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { icono } from '../iconos.js';
 import { establecerUsuario, obtenerUsuario } from '../estado.js';
 import {
-  avisar, conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
+  conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
 } from '../ui.js';
 import { validarCorreo } from '../validacion.js';
 
@@ -18,7 +18,7 @@ function pintarSesion(contenedor, usuario, navegar) {
       </p>
       <p><strong>Correo:</strong> ${usuario.email}</p>
       <div class="acciones">
-        <a class="boton boton--secundario" href="#/preferencias">${icono('ajustes')}Mis ajustes</a>
+        <a class="boton boton--secundario" href="preferencias.html">${icono('ajustes')}Mis ajustes</a>
         <button type="button" class="boton boton--primario" data-salir>${icono('salir')}Cerrar sesión</button>
       </div>
     </section>`);
@@ -30,8 +30,7 @@ function pintarSesion(contenedor, usuario, navegar) {
       /* aunque falle, se limpia la sesión local */
     }
     establecerUsuario(null);
-    avisar('Cerraste sesión.');
-    navegar('/');
+    navegar('index.html', 'Cerraste sesión.');
   });
 }
 
@@ -56,7 +55,7 @@ function pintarLogin(contenedor, navegar) {
         </div>
         <p class="campo__error" data-error-general role="alert"></p>
         <button type="submit" class="boton boton--primario boton--bloque">Entrar</button>
-        <p class="formulario__pie">¿No tienes cuenta? <a href="#/registro">Crea una</a></p>
+        <p class="formulario__pie">¿No tienes cuenta? <a href="registro.html">Crea una</a></p>
       </form>
 
       <aside class="panel lectura" aria-labelledby="titulo-sin-cuenta">
@@ -81,8 +80,7 @@ function pintarLogin(contenedor, navegar) {
     try {
       const datos = await conEnvio(formulario, () => api.login({ email, password }));
       establecerUsuario(datos?.usuario ?? datos);
-      avisar('Sesión iniciada.');
-      navegar('/');
+      navegar('index.html', 'Sesión iniciada.');
     } catch (error) {
       mostrarErroresDeApi(formulario, error);
     }

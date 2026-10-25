@@ -15,7 +15,7 @@ function crearStore(redis, prefijo) {
   return new RedisStore({ sendCommand: (...args) => redis.call(...args), prefix: prefijo });
 }
 
-// 02: límite de intentos (global + estricto para QR/registro/login → 429 DEMASIADOS_INTENTOS)
+// 02: límite de intentos (global + estricto para QR/registro/login)
 /**
  * global: protege toda la API.
  * auth:   más estricto para QR, registro e inicio de sesión (frena la adivinanza de contraseñas).

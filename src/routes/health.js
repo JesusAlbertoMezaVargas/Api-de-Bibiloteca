@@ -7,9 +7,9 @@ const asyncHandler = require('../middleware/asyncHandler');
 module.exports = function healthRouter({ redis }) {
   const router = Router();
 
-  // Ruta de salud: sirve para comprobar que el servidor responde (y para el monitoreo del hosting).
+  // Ruta de salud: comprobar que el servidor responde y para el monitoreo del host.
   // "redis" informa si la caché está disponible; la API sigue "ok" aunque Redis esté caído.
-  // si cumple 02: ruta de salud
+  //02: ruta de salud
   router.get('/health', asyncHandler(async (req, res) => {
     res.json({
       estado: 'ok',

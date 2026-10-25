@@ -1,7 +1,7 @@
 'use strict';
 const { AppError } = require('../errors');
 
-// si cumple 02: manejo uniforme de errores (404, 400 JSON_INVALIDO, 413, 429, 500 sin exponer detalles)
+// 02: manejo uniforme de errores (404, 400 JSON_INVALIDO, 413, 429, 500 sin exponer detalles)
 /** Formato único de error: { error: { code, message, details?, requestId } } */
 function cuerpoError(req, code, message, details) {
   const error = { code, message, requestId: req.id };

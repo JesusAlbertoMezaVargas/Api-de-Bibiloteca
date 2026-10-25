@@ -62,7 +62,7 @@ export default {
         </fieldset>
 
         <button type="submit" class="boton boton--primario boton--bloque">Guardar ajustes</button>
-        ${usuario ? '' : html`<p class="formulario__pie"><a href="#/cuenta">Inicia sesión</a> para usarlos en cualquier teléfono.</p>`}
+        ${usuario ? '' : html`<p class="formulario__pie"><a href="cuenta.html">Inicia sesión</a> para usarlos en cualquier teléfono.</p>`}
       </form>`);
 
     const formulario = contenedor.querySelector('form');

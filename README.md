@@ -47,10 +47,12 @@ src/
   redis.js               conexión opcional a Redis y estado para /api/health
   schemas/index.js       esquemas de validación de cada endpoint
 public/                  frontend (HTML5, CSS3 y JavaScript con módulos ES, sin compilador)
-  index.html             estructura base, navegación y región de avisos
+  index.html             inicio; cada pantalla es su propio .html con la misma estructura base
+  areas.html, area.html  lista de áreas y guía de un área (area.html?id=...)
+  acceso.html            acceso QR (acceso.html?codigo=... valida directo)
+  preferencias.html, cuenta.html, registro.html
   css/styles.css         diseño móvil primero; barra inferior en móvil y menú superior en escritorio
-  js/main.js             punto de entrada: preferencias, sesión y rutas
-  js/router.js           enrutador por hash (#/areas, #/areas/:id, #/acceso?codigo=...)
+  js/main.js             punto de entrada de cada página: preferencias, sesión y la vista de data-vista
   js/api.js              cliente de la API con el formato uniforme de error
   js/estado.js           preferencias de accesibilidad y usuario en sesión
   js/ui.js, html.js      plantillas seguras, avisos y errores de formulario

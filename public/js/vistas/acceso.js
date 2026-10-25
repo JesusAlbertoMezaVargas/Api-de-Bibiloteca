@@ -1,7 +1,7 @@
 import { html, pintar } from '../html.js';
 import { api } from '../api.js';
 import {
-  avisar, conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
+  conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
 } from '../ui.js';
 
 export default {
@@ -47,8 +47,7 @@ export default {
       }
       try {
         await conEnvio(formulario, () => api.validarQr(codigo));
-        avisar('Acceso validado. ¡Te damos la bienvenida!');
-        navegar('/areas');
+        navegar('areas.html', 'Acceso validado. ¡Te damos la bienvenida!');
       } catch (error) {
         mostrarErroresDeApi(formulario, error);
       }
@@ -59,7 +58,7 @@ export default {
       validar(formulario.elements.codigo.value.trim());
     });
 
-    // El QR puede abrir directamente #/acceso?codigo=XXXX
+    // El QR puede abrir directamente acceso.html?codigo=XXXX
     const codigoEnEnlace = consulta.get('codigo');
     if (codigoEnEnlace) {
       formulario.elements.codigo.value = codigoEnEnlace;

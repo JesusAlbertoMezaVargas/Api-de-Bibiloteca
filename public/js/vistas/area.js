@@ -5,7 +5,7 @@ import { obtenerPreferencias } from '../estado.js';
 import { encabezadoPagina, mostrarCargando, mostrarError } from '../ui.js';
 
 const hayVoz = 'speechSynthesis' in window;
-const VOLVER = { href: '#/areas', texto: 'Áreas' };
+const VOLVER = { href: 'areas.html', texto: 'Áreas' };
 
 function leerEnVozAlta(texto) {
   if (!hayVoz) return;

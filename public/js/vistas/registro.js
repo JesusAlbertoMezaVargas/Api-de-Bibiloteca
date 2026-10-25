@@ -2,7 +2,7 @@ import { html, pintar } from '../html.js';
 import { api } from '../api.js';
 import { establecerUsuario } from '../estado.js';
 import {
-  avisar, conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
+  conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
 } from '../ui.js';
 import { validarCorreo, validarNombre, validarPasswordNueva } from '../validacion.js';
 
@@ -13,7 +13,7 @@ export default {
       ${encabezadoPagina({
         titulo: 'Crear cuenta',
         entrada: 'Solo necesitas tu nombre, un correo y una contraseña.',
-        volver: { href: '#/cuenta', texto: 'Iniciar sesión' },
+        volver: { href: 'cuenta.html', texto: 'Iniciar sesión' },
       })}
 
       <form class="formulario" novalidate>
@@ -62,8 +62,7 @@ export default {
       try {
         const respuesta = await conEnvio(formulario, () => api.registro(datos));
         establecerUsuario(respuesta?.usuario ?? respuesta);
-        avisar('Cuenta creada. ¡Te damos la bienvenida!');
-        navegar('/');
+        navegar('index.html', 'Cuenta creada. ¡Te damos la bienvenida!');
       } catch (error) {
         mostrarErroresDeApi(formulario, error);
       }

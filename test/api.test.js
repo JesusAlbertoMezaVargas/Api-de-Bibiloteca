@@ -16,7 +16,7 @@ async function iniciar(overrides = {}) {
   return { pedir, cerrar: () => new Promise((ok) => server.close(ok)) };
 }
 
-// si cumple 02: evidencia/pruebas de aceptación de salud, Helmet, errores uniformes, validación y límite de intentos
+//  02: evidencia/pruebas de aceptación de salud, Helmet, errores uniformes, validación y límite de intentos
 test('GET /api/health responde 200 con el estado del servicio', async () => {
   const { pedir, cerrar } = await iniciar();
   const res = await pedir('/api/health');
@@ -134,5 +134,11 @@ test('El frontend se sirve desde / con sus módulos ES y la misma política de s
   const modulo = await pedir('/js/main.js');
   assert.equal(modulo.status, 200);
   assert.match(modulo.headers.get('content-type'), /javascript/);
+
+  for (const pagina of ['areas', 'area', 'acceso', 'preferencias', 'cuenta', 'registro']) {
+    const res = await pedir(`/${pagina}.html`);
+    assert.equal(res.status, 200, `${pagina}.html`);
+    assert.match(await res.text(), new RegExp(`data-vista="${pagina}"`));
+  }
   await cerrar();
 });

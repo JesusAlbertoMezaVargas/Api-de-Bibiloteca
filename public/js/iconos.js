@@ -1,4 +1,4 @@
-// Iconos SVG definidos una sola vez en index.html (<symbol id="i-...">).
+// Iconos SVG definidos en cada página .html (<symbol id="i-...">).
 // Son decorativos: el texto que los acompaña es el que describe la acción.
 import { html } from './html.js';
 

@@ -10,6 +10,6 @@ export default {
         titulo: 'No encontramos esta página',
         entrada: 'Puede que el enlace esté incompleto o que la sección haya cambiado de lugar.',
       })}
-      <a class="boton boton--primario" href="#/">${icono('inicio')}Volver al inicio</a>`);
+      <a class="boton boton--primario" href="index.html">${icono('inicio')}Volver al inicio</a>`);
   },
 };
