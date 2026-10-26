@@ -5,7 +5,7 @@ const { createApp } = require('../src/app');
 
 /** Levanta una instancia nueva (con su propio contador de límites) en un puerto libre. */
 async function iniciar(overrides = {}) {
-  const app = createApp({ nodeEnv: 'test', redisUrl: '', ...overrides });
+  const app = createApp({ nodeEnv: 'test', redisUrl: '', usersFile: null, bcryptRounds: 4, ...overrides });
   const server = await new Promise((ok) => { const s = app.listen(0, () => ok(s)); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const pedir = (ruta, opciones = {}) => fetch(base + ruta, {
@@ -81,8 +81,9 @@ test('La validación rechaza campos que no están en el contrato', async () => {
 
 test('Datos válidos llegan al endpoint (501 mientras no esté implementado)', async () => {
   const { pedir, cerrar } = await iniciar();
-  const res = await pedir('/api/auth/login', {
-    method: 'POST', body: { email: 'Ana@Correo.com', password: 'secreta1' },
+  // /auth/login ya está implementado; se usa /qr/validar, que sigue pendiente.
+  const res = await pedir('/api/qr/validar', {
+    method: 'POST', body: { codigo: 'CODIGO-DE-PRUEBA-123' },
   });
   const json = await res.json();
   assert.equal(res.status, 501);
