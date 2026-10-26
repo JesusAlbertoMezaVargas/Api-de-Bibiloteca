@@ -14,6 +14,7 @@ function leerEnVozAlta(texto) {
   frase.lang = 'es-MX';
   frase.rate = obtenerPreferencias().velocidadVoz;
   speechSynthesis.speak(frase);
+  api.registrarUsoAudio().catch(() => {});
 }
 
 export default {
@@ -53,11 +54,25 @@ export default {
             <button type="button" class="boton boton--primario" data-escuchar>${icono('altavoz')}Escuchar guía</button>
             <button type="button" class="boton boton--secundario" data-detener>${icono('detener')}Detener</button>
           </div>` : ''}
+        <div class="acciones">
+          <button type="button" class="boton boton--secundario" data-finalizar>Marcar guía como terminada</button>
+        </div>
       </article>`);
 
     const textoGuia = [area.nombre, area.ubicacion, area.descripcion, ...pasos].filter(Boolean).join('. ');
     contenedor.querySelector('[data-escuchar]')?.addEventListener('click', () => leerEnVozAlta(textoGuia));
     contenedor.querySelector('[data-detener]')?.addEventListener('click', () => speechSynthesis.cancel());
+    contenedor.querySelector('[data-finalizar]')?.addEventListener('click', async (evento) => {
+      const boton = evento.currentTarget;
+      boton.disabled = true;
+      try {
+        await api.registrarFinalizacion(params.id);
+        boton.textContent = 'Guía terminada';
+      } catch {
+        boton.disabled = false;
+        boton.textContent = 'No se pudo registrar. Inténtalo de nuevo.';
+      }
+    });
     if (obtenerPreferencias().audioAutomatico) leerEnVozAlta(textoGuia);
 
     // Registro de uso: si falla no debe interrumpir la lectura de la guía.

@@ -5,7 +5,7 @@ const email = z.string({ required_error: 'El correo es obligatorio.' })
   .trim().toLowerCase().max(254, 'El correo es demasiado largo.')
   .regex(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, 'Escribe un correo completo, por ejemplo nombre@correo.com.');
 
-// bcrypt solo usa los primeros 72 bytes de la contraseña.
+// El límite conserva el contrato del formulario y acota el costo de procesamiento.
 const passwordNueva = z.string({ required_error: 'La contraseña es obligatoria.' })
   .min(6, 'Usa al menos 6 caracteres.').max(72, 'Usa máximo 72 caracteres.');
 
@@ -29,4 +29,7 @@ module.exports = {
     }).strict(),
   },
   usoGuia: { body: z.object({ areaId: slug }).strict() },
+  usoServicioOpcional: {
+    body: z.object({ servicioId: slug.optional() }).strict(),
+  },
 };

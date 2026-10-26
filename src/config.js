@@ -20,12 +20,10 @@ function loadConfig(env = process.env, overrides = {}) {
     port: toNumber(env.PORT, 3000),
     trustProxy: env.TRUST_PROXY === 'true',
     jwtSecret: env.JWT_SECRET || '',
-    redisUrl: env.REDIS_URL || '', //                  vacío = sin Redis (se usa memoria local)
+    redisUrl: env.REDIS_URL || (nodeEnv === 'development' ? 'redis://127.0.0.1:6379' : ''),
     cacheTtlSeconds: toNumber(env.CACHE_TTL_SECONDS, 600),
-    // 03: vigencia de acceso — JWT 2 h (JWT_EXPIRES_MIN), pase QR 4 h (QR_PASS_MIN), costo de bcrypt (BCRYPT_ROUNDS)
-    jwtExpiresMs: toNumber(env.JWT_EXPIRES_MIN, 120) * MIN, // sesión del usuario
-    qrPassMs: toNumber(env.QR_PASS_MIN, 240) * MIN, //          pase de acceso por QR
-    bcryptRounds: toNumber(env.BCRYPT_ROUNDS, 12),
+    sessionTtlSeconds: toNumber(env.SESSION_TTL_SECONDS, 1800),
+    qrAccessCode: env.QR_ACCESS_CODE || '',
     rateGlobalMax: toNumber(env.RATE_GLOBAL_MAX, 100),
     rateGlobalWindowMs: toNumber(env.RATE_GLOBAL_WINDOW_MIN, 15) * MIN,
     rateAuthMax: toNumber(env.RATE_AUTH_MAX, 10),
@@ -35,6 +33,12 @@ function loadConfig(env = process.env, overrides = {}) {
 
   if (cfg.isProduction && cfg.jwtSecret.length < 32) {
     throw new Error('JWT_SECRET es obligatorio en producción y debe tener al menos 32 caracteres.');
+  }
+  if (cfg.isProduction && !cfg.redisUrl) {
+    throw new Error('REDIS_URL es obligatorio en producción.');
+  }
+  if (cfg.isProduction && cfg.qrAccessCode.length < 16) {
+    throw new Error('QR_ACCESS_CODE es obligatorio en producción y debe tener al menos 16 caracteres.');
   }
   if (!cfg.jwtSecret) cfg.jwtSecret = 'solo-para-desarrollo-no-usar-en-produccion';
   return cfg;

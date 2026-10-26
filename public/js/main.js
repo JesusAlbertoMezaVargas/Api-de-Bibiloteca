@@ -1,7 +1,7 @@
 // Punto de entrada de cada página: aplica preferencias, recupera la sesión y pinta
 // la vista indicada en <main data-vista="...">. Cada pantalla es su propio .html.
 import { api } from './api.js';
-import { cargarPreferencias, establecerUsuario } from './estado.js';
+import { cargarPreferencias, guardarPreferencias, establecerUsuario } from './estado.js';
 import { avisar } from './ui.js';
 
 import inicio from './vistas/inicio.js';
@@ -43,6 +43,17 @@ if (vista === noEncontrada) document.title = `${noEncontrada.titulo} · Bibliote
 
 // Si ya hay sesión (cookie), se recupera el usuario; si no, se sigue como invitado.
 api.yo()
-  .then((datos) => establecerUsuario(datos?.usuario ?? datos))
+  .then(async (datos) => {
+    const usuario = datos?.usuario ?? datos;
+    establecerUsuario(usuario);
+    if (usuario) {
+      try {
+        const respuesta = await api.preferencias();
+        if (respuesta?.preferencias) guardarPreferencias(respuesta.preferencias);
+      } catch {
+        // Si Redis no responde, se mantienen las preferencias locales del dispositivo.
+      }
+    }
+  })
   .catch(() => establecerUsuario(null))
   .finally(() => vista.render(contenedor, { params, consulta, navegar }));

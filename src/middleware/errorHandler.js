@@ -28,6 +28,11 @@ function errorHandler(err, req, res, next) {
     status = 400; code = 'JSON_INVALIDO'; message = 'El cuerpo de la solicitud no es un JSON válido.';
   } else if (err && err.type === 'entity.too.large') {
     status = 413; code = 'CUERPO_MUY_GRANDE'; message = 'La solicitud es demasiado grande.';
+  } else if (err && (err.name === 'MaxRetriesPerRequestError'
+    || ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT'].includes(err.code))) {
+    status = 503; code = 'ALMACEN_NO_DISPONIBLE';
+    message = 'La base de datos no está disponible. Inténtalo de nuevo más tarde.';
+    console.error(`[${req.id}] Redis no disponible:`, err.message);
   } else {
     // Error no previsto: se registra completo, pero al cliente no se le expone el detalle.
     console.error(`[${req.id}]`, err);

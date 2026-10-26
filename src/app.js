@@ -51,7 +51,7 @@ function createApp(overrides = {}) {
   app.use('/api', healthRouter({ redis }));
   // si cumple 02: límite de intentos global para toda la API (express-rate-limit)
   app.use('/api', limiters.global);
-  app.use('/api', apiRouter({ limiters }));
+  app.use('/api', apiRouter({ limiters, redis, config: cfg }));
 
   //  02: manejo uniforme de errores (404 + formato único { error: { code, message, details, requestId } })
   app.use(notFoundHandler);
