@@ -23,7 +23,7 @@ module.exports = {
   preferencias: {
     body: z.object({
       tamanoLetra: z.enum(['normal', 'grande', 'muy_grande']),
-      altoContraste: z.boolean(),
+      tema: z.enum(['claro', 'oscuro']),
       audioAutomatico: z.boolean(),
       velocidadVoz: z.union([z.literal(0.8), z.literal(1), z.literal(1.25)]),
     }).strict(),

@@ -82,3 +82,13 @@ Implementar, en este orden: conexión a la base de datos, `auth` (bcrypt + JWT e
 
 - No subas `.env` a GitHub (ya está en `.gitignore`).
 - En producción `JWT_SECRET` es obligatorio (32 caracteres o más) y el servidor no arranca sin él.
+
+## Maqueta 3D
+
+`areas.html` muestra la biblioteca en 3D con [Three.js](https://threejs.org/), con vistas de maqueta, planta y recorrido. El código está en `public/js/mapa3d/`: `distribucion.js` tiene las medidas del croquis, `construir.js` arma el edificio y los muebles, `texturas.js` dibuja los acabados y `visor.js` maneja la cámara y los marcadores. Si el equipo no tiene WebGL se muestra el plano 2D.
+
+La CSP no permite importmaps en línea, así que Three.js se empaqueta en `public/vendor/three.bundle.js`. Ese archivo se versiona; solo hay que regenerarlo al actualizar Three.js o al usar otro módulo de `three/addons`:
+
+```bash
+npm run build:three
+```
