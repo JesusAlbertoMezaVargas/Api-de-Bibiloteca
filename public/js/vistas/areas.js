@@ -6,7 +6,7 @@ import { encabezadoPagina, tarjetaEnlace } from '../ui.js';
 // Cada figura es un enlace a la guía de su servicio: servicio.html?id=<id>.
 const enlace = (id) => `servicio.html?id=${encodeURIComponent(id)}`;
 
-const rect = (id, x, y, w, h, titulo, subtitulo, { antetitulo, rx = 2 } = {}) => {
+const rect = (id, x, y, w, h, titulo, subtitulo, { antetitulo, rx = 10 } = {}) => {
   const s = buscarServicio(id);
   const cx = x + w / 2;
   const cy = y + h / 2;
@@ -28,20 +28,35 @@ const estante = (n, x) => {
   const s = buscarServicio(`estanteria-${n}`);
   return html`
     <a href="${enlace(s.id)}" class="plano__zona plano__zona--acervo" aria-label="${s.nombre}: ${s.detalle}">
-      <rect x="${x}" y="415" width="38" height="141" rx="2"></rect>
-      <text x="${x + 19}" y="486" class="plano__numero">${n}</text>
+      <rect x="${x}" y="415" width="38" height="141" rx="5"></rect>
+      <path class="plano__repisas" d="M${x + 5} 437h28m-28 19h28m-28 19h28m-28 19h28m-28 19h28m-28 19h28"></path>
+      <rect class="plano__placa-estante" x="${x + 6}" y="477" width="26" height="22" rx="7"></rect>
+      <text x="${x + 19}" y="488" class="plano__numero">${n}</text>
     </a>`;
 };
 
 const mesa = (cx, cy) => html`
   <a href="${enlace('mesas')}" class="plano__zona plano__zona--lectura" aria-label="Mesa de lectura">
-    <circle cx="${cx}" cy="${cy}" r="20"></circle>
+    <circle class="plano__silla" cx="${cx - 17}" cy="${cy - 14}" r="5"></circle>
+    <circle class="plano__silla" cx="${cx + 17}" cy="${cy - 14}" r="5"></circle>
+    <circle class="plano__silla" cx="${cx - 17}" cy="${cy + 14}" r="5"></circle>
+    <circle class="plano__silla" cx="${cx + 17}" cy="${cy + 14}" r="5"></circle>
+    <rect class="plano__mesa-superficie" x="${cx - 15}" y="${cy - 11}" width="30" height="22" rx="7"></rect>
     <text x="${cx}" y="${cy}" class="plano__mesa">Mesa</text>
   </a>`;
 
 const plano = () => html`
   <svg class="plano" viewBox="28 108 1224 798" role="group" aria-label="Plano de distribución de la biblioteca. Cada área es un enlace a su guía.">
-    <rect class="plano__muro" x="34" y="114" width="1212" height="785"></rect>
+    <defs>
+      <filter id="plano-sombra" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#13233a" flood-opacity=".14" />
+      </filter>
+      <pattern id="plano-grano" width="18" height="18" patternUnits="userSpaceOnUse">
+        <circle cx="2" cy="2" r=".55" fill="#fff" opacity=".28" />
+      </pattern>
+    </defs>
+    <rect class="plano__muro" x="34" y="114" width="1212" height="785" rx="18"></rect>
+    <rect x="34" y="114" width="1212" height="785" rx="18" fill="url(#plano-grano)" aria-hidden="true"></rect>
 
     ${rect('oficinas', 36, 116, 132, 230, 'Oficinas', 'Administración')}
     ${rect('consulta', 170, 116, 158, 70, 'Colección de consulta')}
@@ -100,23 +115,57 @@ export default {
       })}
 
       <section class="panel plano-panel" aria-labelledby="titulo-plano">
-        <h2 id="titulo-plano" class="visualmente-oculto">Plano de distribución</h2>
-        <div class="plano-contenedor">${plano()}</div>
-        <p class="plano-ayuda">Croquis esquemático, sin escala. En el teléfono desliza el plano hacia los lados.</p>
+        <div class="plano-panel__cabecera">
+          <div>
+            <span class="plano-panel__etiqueta">Biblioteca de la Alameda</span>
+            <h2 id="titulo-plano">Mapa del edificio</h2>
+          </div>
+        </div>
+        <div class="plano-marco">
+          <div class="plano-marco__barra" aria-hidden="true">
+            <span>Planta general</span>
+            <span>Seleccione un área</span>
+          </div>
+          <div class="plano-contenedor">
+            <span class="plano-norte" aria-hidden="true"><span>N</span>↑</span>
+            ${plano()}
+          </div>
+        </div>
+        <div class="plano-inferior">
+          <p class="plano-ayuda"><span aria-hidden="true">↔</span> Selecciona un área para consultar su ubicación y guía.</p>
+          <span class="plano-inferior__escala">Plano esquemático · sin escala</span>
+        </div>
         ${leyenda()}
       </section>
 
       <section class="seccion" aria-labelledby="titulo-lista">
         <h2 id="titulo-lista" class="seccion__titulo">Todos los servicios</h2>
-        <ul class="tarjetas">
-          ${SERVICIOS.map((s) => html`<li>${tarjetaEnlace({
-            href: enlace(s.id),
-            icono: 'ubicacion',
-            titulo: s.nombre,
-            texto: s.detalle,
-            accion: 'Ver guía',
-          })}</li>`)}
-        </ul>
+        <div class="servicios-grupos">
+          ${Object.entries(CATEGORIAS).map(([clave, nombre]) => {
+            const grupo = SERVICIOS.filter((s) => s.categoria === clave);
+            if (!grupo.length) return '';
+            return html`
+              <details class="servicios-grupo servicios-grupo--${clave}">
+                <summary class="servicios-grupo__cabecera">
+                  <span class="servicios-grupo__indicador" aria-hidden="true"></span>
+                  <span class="servicios-grupo__titulo">${nombre}</span>
+                  <span class="servicios-grupo__cantidad">${grupo.length} ${grupo.length === 1 ? 'servicio' : 'servicios'}</span>
+                  <span class="servicios-grupo__flecha" aria-hidden="true">›</span>
+                </summary>
+                <div class="servicios-grupo__contenido">
+                  <ul class="tarjetas">
+                    ${grupo.map((s) => html`<li>${tarjetaEnlace({
+                      href: enlace(s.id),
+                      icono: 'ubicacion',
+                      titulo: s.nombre,
+                      texto: s.detalle,
+                      accion: 'Ver guía',
+                    })}</li>`)}
+                  </ul>
+                </div>
+              </details>`;
+          })}
+        </div>
       </section>`);
   },
 };

@@ -7,7 +7,19 @@ const email = z.string({ required_error: 'El correo es obligatorio.' })
 
 // El límite conserva el contrato del formulario y acota el costo de procesamiento.
 const passwordNueva = z.string({ required_error: 'La contraseña es obligatoria.' })
-  .min(6, 'Usa al menos 6 caracteres.').max(72, 'Usa máximo 72 caracteres.');
+  .superRefine((password, ctx) => {
+    if (password.length < 8) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Usa al menos 8 caracteres.' });
+      return;
+    }
+    if (password.length > 15) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Usa máximo 15 caracteres.' });
+      return;
+    }
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9\s]/.test(password)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Incluye mayúscula, minúscula, número y un carácter especial (*, # o @).' });
+    }
+  });
 
 const nombre = z.string({ required_error: 'El nombre es obligatorio.' })
   .trim().min(2, 'Escribe tu nombre.').max(80, 'El nombre es demasiado largo.');

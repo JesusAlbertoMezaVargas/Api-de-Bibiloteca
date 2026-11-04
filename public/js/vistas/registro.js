@@ -29,9 +29,16 @@ export default {
         </div>
         <div class="campo">
           <label for="password">Contraseña</label>
-          <input id="password" name="password" type="password" autocomplete="new-password" required minlength="6" maxlength="72"
-                 aria-describedby="password-ayuda password-error">
-          <span id="password-ayuda" class="campo__ayuda">Entre 6 y 72 caracteres.</span>
+          <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="15"
+                 aria-describedby="password-ayuda password-requisitos password-error">
+          <span id="password-ayuda" class="campo__ayuda">Entre 8 y 15 caracteres, con una combinación segura.</span>
+          <ul id="password-requisitos" class="requisitos-password" aria-label="Requisitos de la contraseña">
+            <li data-regla="longitud">8–15 caracteres</li>
+            <li data-regla="minuscula">Una letra minúscula</li>
+            <li data-regla="mayuscula">Una letra mayúscula</li>
+            <li data-regla="numero">Un número</li>
+            <li data-regla="especial">Un carácter especial (*, # o @)</li>
+          </ul>
           <p id="password-error" class="campo__error" data-error-de="password"></p>
         </div>
         <p class="campo__error" data-error-general role="alert"></p>
@@ -39,6 +46,20 @@ export default {
       </form>`);
 
     const formulario = contenedor.querySelector('form');
+    const password = formulario.elements.password;
+    const requisitos = {
+      longitud: (valor) => valor.length >= 8 && valor.length <= 15,
+      minuscula: (valor) => /[a-z]/.test(valor),
+      mayuscula: (valor) => /[A-Z]/.test(valor),
+      numero: (valor) => /[0-9]/.test(valor),
+      especial: (valor) => /[^A-Za-z0-9\s]/.test(valor),
+    };
+    password.addEventListener('input', () => {
+      for (const [regla, cumple] of Object.entries(requisitos)) {
+        const elemento = formulario.querySelector(`[data-regla="${regla}"]`);
+        elemento.classList.toggle('requisitos-password__cumplido', cumple(password.value));
+      }
+    });
     formulario.addEventListener('submit', async (e) => {
       e.preventDefault();
       limpiarErrores(formulario);

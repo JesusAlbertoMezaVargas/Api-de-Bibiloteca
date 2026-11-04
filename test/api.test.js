@@ -177,7 +177,7 @@ test('Registro, sesión, preferencias y logout se guardan de forma segura en Red
   try {
     const registro = await pedir('/api/auth/registro', {
       method: 'POST',
-      body: { nombre: 'Prueba Integración', email, password: 'secreto-seguro-123' },
+      body: { nombre: 'Prueba Integración', email, password: 'Secreto1!' },
     });
     const respuestaRegistro = await registro.json();
     const cookie = registro.headers.get('set-cookie')?.split(';')[0];
@@ -232,7 +232,7 @@ test('Registro, sesión, preferencias y logout se guardan de forma segura en Red
 
     const login = await pedir('/api/auth/login', {
       method: 'POST',
-      body: { email, password: 'secreto-seguro-123' },
+      body: { email, password: 'Secreto1!' },
     });
     assert.equal(login.status, 200);
     const cookieLogin = login.headers.get('set-cookie')?.split(';')[0];
