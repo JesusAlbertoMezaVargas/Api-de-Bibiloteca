@@ -1,12 +1,11 @@
 // Punto de entrada de cada página: aplica preferencias, recupera la sesión y pinta
 // la vista indicada en <main data-vista="...">. Cada pantalla es su propio .html.
 import { api } from './api.js';
-import { cargarPreferencias, guardarPreferencias, establecerUsuario } from './estado.js';
+import { cargarPreferencias, establecerUsuario, guardarPreferencias } from './estado.js';
 import { avisar } from './ui.js';
 
 import inicio from './vistas/inicio.js';
 import areas from './vistas/areas.js';
-import area from './vistas/area.js';
 import servicio from './vistas/servicio.js';
 import acceso from './vistas/acceso.js';
 import preferencias from './vistas/preferencias.js';
@@ -14,13 +13,13 @@ import cuenta from './vistas/cuenta.js';
 import registro from './vistas/registro.js';
 import noEncontrada from './vistas/noEncontrada.js';
 
-const vistas = { inicio, areas, area, servicio, acceso, preferencias, cuenta, registro };
+const vistas = { inicio, areas, servicio, acceso, preferencias, cuenta, registro };
 
-// Primero las preferencias, para que la página no "parpadee" con el tamaño o contraste equivocados.
+// Primero las preferencias, para que la página no "parpadee" con el tamaño o los colores equivocados.
 cargarPreferencias();
 
 const contenedor = document.getElementById('contenido');
-// Los datos llegan en la URL: area.html?id=3, acceso.html?codigo=XXXX
+// Los datos llegan en la URL: servicio.html?id=recepcion, acceso.html?codigo=XXXX
 const consulta = new URLSearchParams(location.search);
 const params = Object.fromEntries(consulta);
 const AVISO_PENDIENTE = 'aviso-pendiente';
@@ -38,22 +37,23 @@ try {
 } catch { /* sin storage */ }
 
 let vista = vistas[contenedor.dataset.vista] ?? noEncontrada;
-if ((vista === area || vista === servicio) && !params.id) vista = noEncontrada;
+if (vista === servicio && !params.id) vista = noEncontrada;
 if (vista === noEncontrada) document.title = `${noEncontrada.titulo} · Biblioteca de la Alameda`;
 
-// Si ya hay sesión (cookie), se recupera el usuario; si no, se sigue como invitado.
-api.yo()
-  .then(async (datos) => {
-    const usuario = datos?.usuario ?? datos;
-    establecerUsuario(usuario);
-    if (usuario) {
-      try {
-        const respuesta = await api.preferencias();
-        if (respuesta?.preferencias) guardarPreferencias(respuesta.preferencias);
-      } catch {
-        // Si Redis no responde, se mantienen las preferencias locales del dispositivo.
-      }
-    }
-  })
-  .catch(() => establecerUsuario(null))
-  .finally(() => vista.render(contenedor, { params, consulta, navegar }));
+// Si ya hay sesión (cookie), se recupera el usuario y sus ajustes guardados en la cuenta, que
+// mandan sobre los de este dispositivo; si no, se sigue como invitado con los ajustes locales.
+async function recuperarSesion() {
+  try {
+    const datos = await api.yo();
+    establecerUsuario(datos?.usuario ?? datos);
+  } catch {
+    establecerUsuario(null);
+    return;
+  }
+  try {
+    const { preferencias } = await api.preferencias();
+    guardarPreferencias(preferencias);
+  } catch { /* sin ajustes de la cuenta: se quedan los de este dispositivo */ }
+}
+
+recuperarSesion().finally(() => vista.render(contenedor, { params, consulta, navegar }));

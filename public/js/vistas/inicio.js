@@ -6,7 +6,7 @@ import { tarjetaEnlace } from '../ui.js';
 const ACCESOS = [
   { href: 'areas.html', icono: 'mapa', titulo: 'Áreas y guías', texto: 'Conoce las salas y los servicios, y sigue la guía paso a paso.', accion: 'Ver áreas' },
   { href: 'acceso.html', icono: 'qr', titulo: 'Acceso con QR', texto: 'Escanea o escribe el código de la entrada para activar tu pase.', accion: 'Validar acceso' },
-  { href: 'preferencias.html', icono: 'ajustes', titulo: 'Ajustes de lectura', texto: 'Letra más grande, alto contraste y lectura en voz alta.', accion: 'Ajustar' },
+  { href: 'preferencias.html', icono: 'ajustes', titulo: 'Ajustes de lectura', texto: 'Letra más grande, modo oscuro y lectura en voz alta.', accion: 'Ajustar' },
 ];
 
 export default {

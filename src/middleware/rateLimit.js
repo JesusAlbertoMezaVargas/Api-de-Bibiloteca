@@ -10,9 +10,14 @@ function handler(req, res, next) {
 
 /** Almacén de contadores: Redis si está configurado; si no, la memoria local del servidor. */
 function crearStore(redis, prefijo) {
-  if (!redis) return undefined;
+  // Sin Redis, o con un cliente que no envía comandos sueltos (el simulado de las pruebas): memoria local.
+  if (typeof redis?.call !== 'function') return undefined;
   const { RedisStore } = require('rate-limit-redis');
-  return new RedisStore({ sendCommand: (...args) => redis.call(...args), prefix: prefijo });
+  const store = new RedisStore({ sendCommand: (...args) => redis.call(...args), prefix: prefijo });
+  // Al arrancar, Redis todavía no está conectado y la carga inicial de su script falla. Sin este
+  // catch ese rechazo tumba el proceso; la librería vuelve a cargar el script en la siguiente petición.
+  for (const carga of [store.incrementScriptSha, store.getScriptSha]) carga.catch(() => {});
+  return store;
 }
 
 // 02: límite de intentos (global + estricto para QR/registro/login)

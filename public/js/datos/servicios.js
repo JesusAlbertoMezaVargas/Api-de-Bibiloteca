@@ -403,11 +403,26 @@ export const SERVICIOS = [
     fotos: [foto('bano-mujeres.jpeg', 'Entrada al baño de mujeres')],
   },
   {
+    id: 'salida-emergencia',
+    nombre: 'Salida de emergencia',
+    detalle: 'Solo para emergencias',
+    categoria: 'servicios',
+    ubicacion: 'Parte superior, entre el Catálogo público y el Área infantil',
+    resumen: 'Puerta de salida para usarse únicamente en una emergencia.',
+    queHacer: ['Salir del edificio en caso de emergencia.'],
+    pasos: [
+      'Si hay una emergencia, conserva la calma y sigue las indicaciones del personal.',
+      'Camina hacia la parte superior de la biblioteca, pasando el Catálogo público.',
+      'Sal por la puerta y aléjate del edificio.',
+    ],
+    fotos: [],
+  },
+  {
     id: 'oficinas',
     nombre: 'Oficinas',
     detalle: 'Administración (no público)',
     categoria: 'admin',
-    ubicacion: 'Esquina superior izquierda',
+    ubicacion: 'A todo lo largo del lado izquierdo, entre los baños del fondo y a la derecha, junto al Área de cómics',
     resumen: 'Oficinas administrativas de la biblioteca. No son de acceso al público.',
     queHacer: [
       'Solo personal de la biblioteca.',

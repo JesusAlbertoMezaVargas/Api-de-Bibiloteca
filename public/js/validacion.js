@@ -16,13 +16,21 @@ export function validarNombre(nombre) {
   return '';
 }
 
+/** Requisitos de la contraseña nueva; la pantalla de registro los marca conforme se escribe. */
+export const REQUISITOS_PASSWORD = [
+  { clave: 'largo', texto: 'Entre 8 y 15 caracteres', cumple: (v) => v.length >= 8 && v.length <= 15 },
+  { clave: 'minuscula', texto: 'Una letra minúscula', cumple: (v) => /\p{Ll}/u.test(v) },
+  { clave: 'mayuscula', texto: 'Una letra mayúscula', cumple: (v) => /\p{Lu}/u.test(v) },
+  { clave: 'numero', texto: 'Un número', cumple: (v) => /\d/.test(v) },
+  { clave: 'especial', texto: 'Un carácter especial (*, # o @)', cumple: (v) => /[^\p{L}\p{N}\s]/u.test(v) },
+];
+
 export function validarPasswordNueva(password) {
   if (!password) return 'La contraseña es obligatoria.';
   if (password.length < 8) return 'Usa al menos 8 caracteres.';
   if (password.length > 15) return 'Usa máximo 15 caracteres.';
-  if (!/[a-z]/.test(password)) return 'Incluye al menos una letra minúscula.';
-  if (!/[A-Z]/.test(password)) return 'Incluye al menos una letra mayúscula.';
-  if (!/[0-9]/.test(password)) return 'Incluye al menos un número.';
-  if (!/[^A-Za-z0-9\s]/.test(password)) return 'Incluye un carácter especial, como *, # o @.';
+  if (!REQUISITOS_PASSWORD.every((r) => r.cumple(password))) {
+    return 'Incluye mayúscula, minúscula, número y un carácter especial (*, # o @).';
+  }
   return '';
 }
