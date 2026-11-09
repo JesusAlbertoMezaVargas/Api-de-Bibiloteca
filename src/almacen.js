@@ -34,6 +34,13 @@ return 1`;
 const sinAlmacen = () => new AppError(503, 'ALMACEN_NO_DISPONIBLE',
   'El servicio de cuentas no está disponible en este momento. Inténtalo de nuevo en unos minutos.');
 
+// Fallas de conexión con Redis (caído, cortado, sin respuesta). Cualquier otro error es un bug.
+const ERRORES_DE_CONEXION = ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'EPIPE', 'ENOTFOUND'];
+const esFallaDeRedis = (err) =>
+  err?.name === 'MaxRetriesPerRequestError'
+  || ERRORES_DE_CONEXION.includes(err?.code)
+  || /Connection is closed|Stream isn't writeable/i.test(err?.message || '');
+
 const publico = (u) => ({ id: u.id, nombre: u.nombre, email: u.email });
 
 // Redis guarda todo como texto: se devuelven con su tipo (booleano y número).
@@ -51,15 +58,19 @@ const leerPreferencias = (p) => ({
 function crearAlmacen(redis, cfg) {
   const ttl = cfg.sessionTtlSeconds;
 
-  // Cualquier falla de Redis (caído, sin conexión) se traduce a 503; los errores propios pasan igual.
+  // Si Redis falla (caído, sin conexión) se responde 503. Los errores propios (AppError) pasan igual,
+  // y un error de programación sube como 500 para que no quede escondido detrás de un "no disponible".
   const usar = async (operacion) => {
     if (!redis) throw sinAlmacen();
     try {
       return await operacion(redis);
     } catch (err) {
       if (err instanceof AppError) throw err;
-      console.error('[almacen]', err.message);
-      throw sinAlmacen();
+      if (esFallaDeRedis(err)) {
+        console.error('[almacen]', err.message);
+        throw sinAlmacen();
+      }
+      throw err;
     }
   };
 
@@ -82,6 +93,10 @@ function crearAlmacen(redis, cfg) {
       const usuario = await r.hgetall(clave.usuario(id));
       return usuario?.id ? usuario : null;
     }),
+
+    /** Cambia el hash de la contraseña de la cuenta (el hash ya viene calculado). */
+    actualizarPassword: (usuarioId, passwordHash) =>
+      usar((r) => r.hset(clave.usuario(usuarioId), 'password_hash', passwordHash)),
 
     crearSesion: (usuarioId, token) => usar(async (r) => {
       const k = clave.sesion(digestToken(token));
@@ -122,5 +137,9 @@ function crearAlmacen(redis, cfg) {
     }),
   };
 }
+actualizarPassword: (usuarioId, passwordHash) =>
+  usar((r) => r.hset(clave.usuario(usuarioId), 'password_hash', passwordHash)),
 
 module.exports = { crearAlmacen, clave };
+
+
