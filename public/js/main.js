@@ -16,7 +16,7 @@ import noEncontrada from './vistas/noEncontrada.js';
 
 const vistas = { inicio, areas, area, servicio, acceso, preferencias, cuenta, registro };
 
-// Primero las preferencias, para que la página no "parpadee" con el tamaño o contraste equivocados.
+// Primero las preferencias, para que la página no "parpadee" con el tamaño o los colores equivocados.
 cargarPreferencias();
 
 const contenedor = document.getElementById('contenido');

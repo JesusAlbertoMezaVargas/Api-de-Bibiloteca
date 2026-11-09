@@ -1,6 +1,7 @@
 import { html, pintar } from '../html.js';
 import { CATEGORIAS, SERVICIOS, buscarServicio } from '../datos/servicios.js';
-import { encabezadoPagina, tarjetaEnlace } from '../ui.js';
+import { icono } from '../iconos.js';
+import { alerta, encabezadoPagina, tarjetaEnlace } from '../ui.js';
 
 // Plano de la biblioteca. Las coordenadas siguen el croquis original (sin escala).
 // Cada figura es un enlace a la guía de su servicio: servicio.html?id=<id>.
@@ -58,11 +59,13 @@ const plano = () => html`
     <rect class="plano__muro" x="34" y="114" width="1212" height="785" rx="18"></rect>
     <rect x="34" y="114" width="1212" height="785" rx="18" fill="url(#plano-grano)" aria-hidden="true"></rect>
 
-    ${rect('oficinas', 36, 116, 132, 230, 'Oficinas', 'Administración')}
+    ${rect('oficinas', 36, 116, 132, 549, 'Oficinas', 'Administración')}
     ${rect('consulta', 170, 116, 158, 70, 'Colección de consulta')}
     ${rect('bano-hombres', 356, 116, 88, 70, 'Baño', 'Hombres')}
+    ${rect('oficinas', 448, 116, 153, 70, 'Oficina', 'Servidores')}
     ${rect('bano-mujeres', 605, 116, 88, 70, 'Baño', 'Mujeres')}
-    ${rect('catalogo', 711, 116, 150, 70, 'Catálogo público', 'Clasificación de libros')}
+    ${rect('catalogo', 700, 116, 100, 70, ['Catálogo', 'público'])}
+    ${rect('salida-emergencia', 804, 116, 82, 70, ['Salida de', 'emergencia'])}
     ${rect('eventos', 889, 116, 354, 128, 'Eventos y presentaciones', 'Talleres', { antetitulo: 'PLANTA ALTA' })}
     ${rect('ludoteca', 889, 244, 354, 128, 'Área infantil · Ludoteca', 'Juegos, libros y lectura', { antetitulo: 'PLANTA BAJA' })}
     <line class="plano__division" x1="889" y1="244" x2="1243" y2="244"></line>
@@ -83,7 +86,8 @@ const plano = () => html`
     ${mesa(659, 603)}${mesa(730, 603)}${mesa(801, 603)}
     ${mesa(1090, 809)}
 
-    ${rect('comics', 1076, 508, 167, 72, 'Área de cómics')}
+    ${rect('comics', 1076, 508, 88, 72, ['Área de', 'cómics'])}
+    ${rect('oficinas', 1168, 508, 75, 72, 'Oficina')}
     <text x="595" y="676" class="plano__circulacion">Circulación</text>
 
     ${rect('aula-trabajo', 36, 667, 159, 230, 'Aula de trabajo', 'Exposiciones, talleres, etc.')}
@@ -105,37 +109,126 @@ const leyenda = () => html`
       <li><span class="plano-leyenda__muestra plano-leyenda__muestra--${clave}" aria-hidden="true"></span>${nombre}</li>`)}
   </ul>`;
 
+// Plano 2D: se queda para equipos sin WebGL o si la maqueta no pudo cargar.
+const planoRespaldo = () => html`
+  ${alerta('info', html`<p>Tu dispositivo no pudo mostrar la maqueta 3D, así que te mostramos el plano.</p>`)}
+  <div class="plano-contenedor">${plano()}</div>
+  <p class="plano-ayuda">Croquis esquemático, sin escala. En el teléfono desliza el plano hacia los lados.</p>
+  ${leyenda()}`;
+
+// Recorrido a la altura de los ojos: está completo en mapa3d/visor.js (modo 'recorrer'),
+// pero todavía no se publica. Para mostrar el botón "Recorrer", cambia esto a true.
+const RECORRIDO_ACTIVO = false;
+
+const MODOS = [
+  { clave: 'maqueta', texto: 'Maqueta' },
+  { clave: 'planta', texto: 'Planta' },
+  RECORRIDO_ACTIVO && { clave: 'recorrer', texto: 'Recorrer' },
+].filter(Boolean);
+
+const AYUDAS = {
+  maqueta: 'Arrastra para girar, pellizca o usa la rueda para acercar. Toca un punto o un área.',
+  planta: 'Arrastra para moverte y pellizca para acercar. Toca un punto o un área.',
+  recorrer: 'Arrastra para mirar alrededor y toca el piso para caminar hasta ahí.',
+};
+
+const visor3d = () => html`
+  <div class="visor" data-visor>
+    <div class="visor__capa" data-marcadores></div>
+    <p class="visor__carga" data-carga role="status">Armando la maqueta…</p>
+    <div class="visor__arriba">
+      <label class="visor__buscar">
+        <span class="visualmente-oculto">Ir a un área</span>
+        <select data-destino>
+          <option value="">¿A dónde quieres ir?</option>
+          ${Object.entries(CATEGORIAS).map(([clave, nombre]) => html`
+            <optgroup label="${nombre}">
+              ${SERVICIOS.filter((s) => s.categoria === clave).map((s) => html`<option value="${s.id}">${s.nombre}</option>`)}
+            </optgroup>`)}
+        </select>
+      </label>
+      <div class="visor__lado">
+        <button type="button" class="visor__boton" data-ampliar aria-pressed="false">Ampliar</button>
+        <button type="button" class="visor__boton" data-alta aria-pressed="true">Planta alta</button>
+      </div>
+    </div>
+    <div class="visor__ficha" data-ficha hidden></div>
+    <div class="visor__abajo">
+      <div class="visor__modos" role="group" aria-label="Vista de la maqueta">
+        ${MODOS.map((m) => html`<button type="button" class="visor__boton" data-modo="${m.clave}" aria-pressed="${m.clave === 'maqueta'}">${m.texto}</button>`)}
+      </div>
+    </div>
+  </div>
+  <p class="plano-ayuda" data-ayuda>${AYUDAS.maqueta}</p>`;
+
+const ficha = (s) => html`
+  ${s.fotos[0] ? html`<img class="visor__foto" src="${s.fotos[0].src}" alt="${s.fotos[0].alt}">` : ''}
+  <div class="visor__texto">
+    <h3 class="visor__titulo">${s.nombre}</h3>
+    <p class="visor__detalle">${s.detalle}</p>
+    <a class="boton boton--primario" href="${enlace(s.id)}">Ver guía${icono('flecha-der')}</a>
+  </div>
+  <button type="button" class="visor__cerrar" data-cerrar aria-label="Cerrar">×</button>`;
+
+async function montarVisor(panel) {
+  const visor = panel.querySelector('[data-visor]');
+  const carga = panel.querySelector('[data-carga]');
+  const fichaEl = panel.querySelector('[data-ficha]');
+  const destino = panel.querySelector('[data-destino]');
+  const ayuda = panel.querySelector('[data-ayuda]');
+  const usarRespaldo = () => pintar(panel, planoRespaldo());
+
+  try {
+    // Three.js pesa: solo se descarga en esta página y después de pintar el resto.
+    const { crearVisor } = await import('../mapa3d/visor.js');
+    await document.fonts?.load('700 40px "Atkinson Hyperlegible"').catch(() => {});
+    const maqueta = crearVisor(visor, panel.querySelector('[data-marcadores]'), {
+      servicios: buscarServicio,
+      alSeleccionar(id) {
+        destino.value = id ?? '';
+        fichaEl.hidden = !id;
+        if (id) pintar(fichaEl, ficha(buscarServicio(id)));
+      },
+      alCambiarModo(modo) {
+        panel.querySelectorAll('[data-modo]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.modo === modo)));
+        panel.querySelector('[data-alta]').hidden = modo === 'recorrer';
+        ayuda.textContent = AYUDAS[modo];
+      },
+      alCambiarAlta(visible) {
+        panel.querySelector('[data-alta]').setAttribute('aria-pressed', String(visible));
+      },
+    });
+    carga.hidden = true;
+
+    visor.addEventListener('maqueta-perdida', usarRespaldo);
+    destino.addEventListener('change', () => maqueta.seleccionar(destino.value || null));
+    panel.querySelectorAll('[data-modo]').forEach((b) => b.addEventListener('click', () => { maqueta.modo = b.dataset.modo; }));
+    panel.querySelector('[data-alta]').addEventListener('click', () => { maqueta.altaVisible = !maqueta.altaVisible; });
+    panel.querySelector('[data-ampliar]').addEventListener('click', (e) => {
+      const ampliado = visor.classList.toggle('visor--completo');
+      document.body.classList.toggle('sin-desplazar', ampliado);
+      e.currentTarget.setAttribute('aria-pressed', String(ampliado));
+      e.currentTarget.textContent = ampliado ? 'Reducir' : 'Ampliar';
+    });
+    fichaEl.addEventListener('click', (e) => { if (e.target.closest('[data-cerrar]')) maqueta.limpiar(); });
+  } catch (error) {
+    console.error('No se pudo cargar la maqueta 3D', error);
+    usarRespaldo();
+  }
+}
+
 export default {
   titulo: 'Áreas',
   render(contenedor) {
     pintar(contenedor, html`
       ${encabezadoPagina({
-        titulo: 'Plano de la biblioteca',
-        entrada: 'Toca un área del plano para ver de qué trata y cómo usarla paso a paso.',
+        titulo: 'Maqueta de la biblioteca',
+        entrada: 'Explora la biblioteca en 3D. Toca un área para ver de qué trata y cómo usarla paso a paso.',
       })}
 
-      <section class="panel plano-panel" aria-labelledby="titulo-plano">
-        <div class="plano-panel__cabecera">
-          <div>
-            <span class="plano-panel__etiqueta">Biblioteca de la Alameda</span>
-            <h2 id="titulo-plano">Mapa del edificio</h2>
-          </div>
-        </div>
-        <div class="plano-marco">
-          <div class="plano-marco__barra" aria-hidden="true">
-            <span>Planta general</span>
-            <span>Seleccione un área</span>
-          </div>
-          <div class="plano-contenedor">
-            <span class="plano-norte" aria-hidden="true"><span>N</span>↑</span>
-            ${plano()}
-          </div>
-        </div>
-        <div class="plano-inferior">
-          <p class="plano-ayuda"><span aria-hidden="true">↔</span> Selecciona un área para consultar su ubicación y guía.</p>
-          <span class="plano-inferior__escala">Plano esquemático · sin escala</span>
-        </div>
-        ${leyenda()}
+      <section class="panel plano-panel" aria-labelledby="titulo-plano" data-maqueta>
+        <h2 id="titulo-plano" class="visualmente-oculto">Maqueta 3D de la biblioteca</h2>
+        ${visor3d()}
       </section>
 
       <section class="seccion" aria-labelledby="titulo-lista">
@@ -154,18 +247,14 @@ export default {
                 </summary>
                 <div class="servicios-grupo__contenido">
                   <ul class="tarjetas">
-                    ${grupo.map((s) => html`<li>${tarjetaEnlace({
-                      href: enlace(s.id),
-                      icono: 'ubicacion',
-                      titulo: s.nombre,
-                      texto: s.detalle,
-                      accion: 'Ver guía',
-                    })}</li>`)}
+                    ${grupo.map((s) => html`<li>${tarjetaEnlace({ href: enlace(s.id), icono: 'ubicacion', titulo: s.nombre, texto: s.detalle, accion: 'Ver guía' })}</li>`)}
                   </ul>
                 </div>
               </details>`;
           })}
         </div>
       </section>`);
+
+    montarVisor(contenedor.querySelector('[data-maqueta]'));
   },
 };

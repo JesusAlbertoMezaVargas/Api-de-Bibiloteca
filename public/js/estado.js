@@ -6,7 +6,7 @@ const CLAVE_PREFS = 'biblioteca:preferencias';
 
 export const PREFERENCIAS_INICIALES = Object.freeze({
   tamanoLetra: 'normal', //   normal | grande | muy_grande
-  altoContraste: false,
+  tema: 'claro', //          claro | oscuro
   audioAutomatico: false,
   velocidadVoz: 1, //         0.8 | 1 | 1.25
 });
@@ -33,7 +33,7 @@ export function obtenerPreferencias() {
 export function aplicarPreferencias(prefs = estado.preferencias) {
   const raiz = document.documentElement;
   raiz.dataset.letra = prefs.tamanoLetra;
-  raiz.dataset.contraste = prefs.altoContraste ? 'alto' : 'normal';
+  raiz.dataset.tema = prefs.tema;
 }
 
 export function guardarPreferencias(cambios) {
@@ -48,7 +48,11 @@ export function guardarPreferencias(cambios) {
 }
 
 export function cargarPreferencias() {
-  estado.preferencias = { ...PREFERENCIAS_INICIALES, ...leerGuardadas() };
+  const { altoContraste, ...guardadas } = leerGuardadas();
+  // Antes había "alto contraste" (fondo negro); quien lo tenía activado pasa al modo oscuro.
+  if (altoContraste && !guardadas.tema) guardadas.tema = 'oscuro';
+  if (!['claro', 'oscuro'].includes(guardadas.tema)) delete guardadas.tema; // p. ej. la opción "automatico" que ya no existe
+  estado.preferencias = { ...PREFERENCIAS_INICIALES, ...guardadas };
   aplicarPreferencias();
 }
 

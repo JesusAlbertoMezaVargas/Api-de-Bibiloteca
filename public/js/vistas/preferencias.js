@@ -5,11 +5,12 @@ import { avisar, conEnvio, encabezadoPagina, mensajeDeError } from '../ui.js';
 
 const TAMANOS = [['normal', 'Normal'], ['grande', 'Grande'], ['muy_grande', 'Muy grande']];
 const VELOCIDADES = [[0.8, 'Lenta'], [1, 'Normal'], [1.25, 'Rápida']];
+const TEMAS = [['claro', 'Clara'], ['oscuro', 'Oscura']];
 
 function leerFormulario(f) {
   return {
     tamanoLetra: f.elements.tamanoLetra.value,
-    altoContraste: f.elements.altoContraste.checked,
+    tema: f.elements.tema.value,
     audioAutomatico: f.elements.audioAutomatico.checked,
     velocidadVoz: Number(f.elements.velocidadVoz.value),
   };
@@ -45,11 +46,13 @@ export default {
         </fieldset>
 
         <fieldset class="campo">
-          <legend>Pantalla y sonido</legend>
-          <label class="interruptor">
-            <span class="interruptor__texto">Alto contraste<small>Colores más marcados para leer con poca luz.</small></span>
-            <input type="checkbox" name="altoContraste" role="switch" ${prefs.altoContraste ? html`checked` : ''}>
-          </label>
+          <legend>Apariencia</legend>
+          ${segmento('tema', TEMAS, prefs.tema)}
+          <p class="campo__ayuda">La oscura cansa menos la vista con poca luz.</p>
+        </fieldset>
+
+        <fieldset class="campo">
+          <legend>Sonido</legend>
           <label class="interruptor">
             <span class="interruptor__texto">Leer guías en voz alta<small>La guía se escucha al abrir un área.</small></span>
             <input type="checkbox" name="audioAutomatico" role="switch" ${prefs.audioAutomatico ? html`checked` : ''}>
