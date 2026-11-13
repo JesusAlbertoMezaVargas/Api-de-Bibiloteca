@@ -8,13 +8,21 @@ const requestId = require('./middleware/requestId');
 const { createLimiters } = require('./middleware/rateLimit');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const { createRedis } = require('./redis');
+const { crearAlmacen } = require('./almacen');
+const { crearRequerirSesion } = require('./middleware/sesion');
 const healthRouter = require('./routes/health');
 const apiRouter = require('./routes/api');
 
-function createApp(overrides = {}) {
+/**
+ * @param overrides     valores de configuración que reemplazan al .env (pruebas)
+ * @param dependencias  { redis }: cliente de Redis ya creado (las pruebas usan uno simulado)
+ */
+function createApp(overrides = {}, dependencias = {}) {
   const cfg = loadConfig(process.env, overrides);
-  const redis = createRedis(cfg);
+  const redis = 'redis' in dependencias ? dependencias.redis : createRedis(cfg);
   const limiters = createLimiters(cfg, redis);
+  const almacen = crearAlmacen(redis, cfg);
+  const requerirSesion = crearRequerirSesion(almacen, cfg);
   const app = express();
 
   app.disable('x-powered-by');
@@ -61,7 +69,7 @@ function createApp(overrides = {}) {
   app.use('/api', healthRouter({ redis }));
   // si cumple 02: límite de intentos global para toda la API (express-rate-limit)
   app.use('/api', limiters.global);
-  app.use('/api', apiRouter({ limiters, redis, config: cfg }));
+  app.use('/api', apiRouter({ limiters, almacen, requerirSesion, cfg }));
 
   //  02: manejo uniforme de errores (404 + formato único { error: { code, message, details, requestId } })
   app.use(notFoundHandler);

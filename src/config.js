@@ -23,11 +23,15 @@ function loadConfig(env = process.env, overrides = {}) {
     tlsKeyPath: env.TLS_KEY_PATH || '',
     tlsCertPath: env.TLS_CERT_PATH || '',
     trustProxy: env.TRUST_PROXY === 'true',
+    // Secreto HMAC con el que se indexan los correos en Redis (no se usa JWT: la sesión es un token opaco).
     jwtSecret: env.JWT_SECRET || '',
-    redisUrl: env.REDIS_URL || (nodeEnv === 'development' ? 'redis://127.0.0.1:6379' : ''),
+    // Redis guarda cuentas y sesiones. En desarrollo apunta al Redis local; en producción es obligatorio.
+    // Un valor vacío en las pruebas (overrides) deja la API sin almacén: las cuentas responden 503.
+    redisUrl: env.REDIS_URL || (nodeEnv === 'production' ? '' : 'redis://127.0.0.1:6379'),
     cacheTtlSeconds: toNumber(env.CACHE_TTL_SECONDS, 600),
+    // Vigencias: la sesión dura 30 min y se renueva con cada uso; el pase QR, 4 h.
     sessionTtlSeconds: toNumber(env.SESSION_TTL_SECONDS, 1800),
-    qrAccessCode: env.QR_ACCESS_CODE || '',
+    qrPassMs: toNumber(env.QR_PASS_MIN, 240) * MIN,
     rateGlobalMax: toNumber(env.RATE_GLOBAL_MAX, 100),
     rateGlobalWindowMs: toNumber(env.RATE_GLOBAL_WINDOW_MIN, 15) * MIN,
     rateAuthMax: toNumber(env.RATE_AUTH_MAX, 10),
@@ -42,10 +46,7 @@ function loadConfig(env = process.env, overrides = {}) {
     throw new Error('JWT_SECRET es obligatorio en producción y debe tener al menos 32 caracteres.');
   }
   if (cfg.isProduction && !cfg.redisUrl) {
-    throw new Error('REDIS_URL es obligatorio en producción.');
-  }
-  if (cfg.isProduction && cfg.qrAccessCode.length < 16) {
-    throw new Error('QR_ACCESS_CODE es obligatorio en producción y debe tener al menos 16 caracteres.');
+    throw new Error('REDIS_URL es obligatorio en producción: ahí se guardan las cuentas y las sesiones.');
   }
   if (!cfg.jwtSecret) cfg.jwtSecret = 'solo-para-desarrollo-no-usar-en-produccion';
   return cfg;

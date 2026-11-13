@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
+    "ioredis-mock": "^8.13.1",
     "three": "^0.187.0"
   }
 }

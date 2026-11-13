@@ -50,10 +50,4 @@ export const api = {
   preferencias: () => pedir('/preferencias'),
   guardarPreferencias: (prefs) => pedir('/preferencias', { metodo: 'PUT', cuerpo: prefs }),
   registrarUsoGuia: (areaId) => pedir('/uso/guias', { metodo: 'POST', cuerpo: { areaId } }),
-  registrarUsoAudio: (servicioId) => pedir('/uso/audio', {
-    metodo: 'POST', cuerpo: servicioId ? { servicioId } : {},
-  }),
-  registrarFinalizacion: (servicioId) => pedir('/uso/finalizaciones', {
-    metodo: 'POST', cuerpo: servicioId ? { servicioId } : {},
-  }),
 };
