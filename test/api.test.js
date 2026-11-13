@@ -62,6 +62,15 @@ test('Helmet agrega cabeceras de seguridad y oculta X-Powered-By', async () => {
   await cerrar();
 });
 
+test('La hoja CSS se sirve desde el mismo origen', async () => {
+  const { pedir, cerrar } = await iniciar();
+  const res = await pedir('/css/styles.css');
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /text\/css/);
+  assert.match(await res.text(), /:root/);
+  await cerrar();
+});
+
 test('Una ruta inexistente responde 404 con el formato uniforme de error', async () => {
   const { pedir, cerrar } = await iniciar();
   const res = await pedir('/api/no-existe');
@@ -147,6 +156,18 @@ test('Producción requiere secretos privados y Redis configurado', () => {
     REDIS_URL: 'rediss://redis.example.internal:6380',
   });
   assert.equal(config.isProduction, true);
+});
+
+test('HTTPS requiere rutas para certificado y clave juntas', () => {
+  assert.throws(() => loadConfig({ TLS_KEY_PATH: 'certs/lan-key.pem' }), /TLS_KEY_PATH y TLS_CERT_PATH/);
+  assert.throws(() => loadConfig({ TLS_CERT_PATH: 'certs/lan-cert.pem' }), /TLS_KEY_PATH y TLS_CERT_PATH/);
+  const config = loadConfig({
+    HOST: '0.0.0.0',
+    TLS_KEY_PATH: 'certs/lan-key.pem',
+    TLS_CERT_PATH: 'certs/lan-cert.pem',
+  });
+  assert.equal(config.host, '0.0.0.0');
+  assert.equal(config.tlsKeyPath, 'certs/lan-key.pem');
 });
 
 test('Registro, sesión, preferencias y logout se guardan de forma segura en Redis', async (t) => {

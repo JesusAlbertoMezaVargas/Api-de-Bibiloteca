@@ -26,6 +26,12 @@ function createApp(overrides = {}) {
   // Cabeceras de seguridad. La política de contenido es estricta: solo recursos propios,
   // más Google Fonts para las tipografías del frontend.
   app.use(helmet({
+    // En desarrollo se accede por HTTP desde una IP privada. Estos encabezados
+    // requieren un origen seguro y generan avisos inútiles en la consola.
+    crossOriginOpenerPolicy: cfg.isProduction ? { policy: 'same-origin' } : false,
+    // Debe mantenerse constante en desarrollo y producción para que Chrome
+    // agrupe todas las páginas del origen de forma uniforme.
+    originAgentCluster: true,
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -41,7 +47,11 @@ function createApp(overrides = {}) {
   }));
 
   // Frontend (HTML/CSS/JS con módulos ES) servido desde el mismo origen que la API.
-  app.use(express.static(path.join(__dirname, '..', 'public')));
+  const publicDir = path.join(__dirname, '..', 'public');
+  app.use(express.static(publicDir));
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
 
   app.use(express.json({ limit: '10kb' }));
   app.use(cookieParser());

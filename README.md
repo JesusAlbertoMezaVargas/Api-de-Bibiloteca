@@ -15,6 +15,37 @@ npm run dev
 
 `npm run seed` carga o actualiza los datos de prueba sin duplicarlos. Incluye 5 áreas, 23 servicios, 69 pasos y el mapa (98 hashes en total). Abre <http://localhost:3000/> y revisa <http://localhost:3000/api/health>.
 
+### Abrir desde otros dispositivos de la misma red
+
+El servidor escucha en todas las interfaces (`HOST=0.0.0.0`); no hace falta pasar `-- -h 0.0.0.0`. En esta computadora ejecuta `npm run dev`. En la consola aparecerán varias direcciones: usa la IPv4 del adaptador Wi-Fi o Ethernet conectado a la misma red que el otro dispositivo. Puedes identificarla con `ipconfig` (busca «Dirección IPv4» bajo el adaptador conectado). Abre en el otro dispositivo `http://ESA-IP:3000`. No uses `localhost`, porque en el teléfono apuntaría al propio teléfono.
+
+Ambos dispositivos deben estar en la misma red; algunas redes de invitados aíslan sus dispositivos. Si la página no abre, permite el puerto TCP 3000 en el firewall de Windows desde la red local. Abre PowerShell como administrador y ejecuta:
+
+```powershell
+New-NetFirewallRule -DisplayName "Biblioteca API red local (TCP 3000)" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000 -RemoteAddress LocalSubnet -Profile Private,Public
+```
+
+El HTML, CSS, JavaScript, imágenes y maqueta 3D se sirven desde el mismo sitio. Para comprobar el CSS desde el otro dispositivo, abre también `http://ESA-IP:3000/css/styles.css`; debe aparecer una hoja de estilos, no un error ni una página HTML. Si esa URL abre pero la página sigue sin estilos, recarga la página y revisa la consola del navegador; si no abre, el problema está en la dirección, la red o el firewall.
+
+Para usar HTTPS directamente en la red local, crea un certificado para la IP Wi-Fi actual de esta computadora. Identifícala con `ipconfig` en Windows (IPv4 del adaptador Wi-Fi). No uses las direcciones de `vEthernet`/WSL, como `172.31.240.1`: son adaptadores virtuales y otros dispositivos no pueden acceder a ellos. Si `mkcert` está instalado en WSL y el proyecto está en el disco `C:`, ejecuta en WSL:
+
+```bash
+cd "/mnt/c/Users/Cesar Rosas/Desktop/ESCUELITA/TdFS/Api-de-Bibiloteca"
+mkdir -p certs
+mkcert -install
+mkcert -key-file certs/lan-key.pem -cert-file certs/lan-cert.pem IP-WIFI localhost 127.0.0.1
+cp "$(mkcert -CAROOT)/rootCA.pem" certs/rootCA.pem
+```
+
+En `.env`, configura las rutas de ambos archivos. Las rutas relativas funcionan al ejecutar `npm run dev` desde la carpeta del proyecto, tanto en Windows como en WSL:
+
+```dotenv
+TLS_KEY_PATH=certs/lan-key.pem
+TLS_CERT_PATH=certs/lan-cert.pem
+```
+
+`mkcert -install` en WSL instala la CA en WSL, no en Windows. Para que Edge/Chrome de Windows confíe en el certificado, abre `certmgr.msc` en Windows e importa `certs/rootCA.pem` en **Certificados - usuario actual > Entidades de certificación raíz de confianza > Certificados**. Inicia o reinicia `npm run dev` y entra exclusivamente por `https://IP-WIFI:3000`. La consola del servidor indica el nombre del adaptador junto a cada URL y marca las interfaces virtuales para no confundirlas con la Wi-Fi. El HTML y `/css/styles.css` se sirven bajo el mismo origen HTTPS. Para abrirlo en un teléfono, instala también en ese dispositivo el certificado raíz público `certs/rootCA.pem`; nunca copies ni compartas `rootCA-key.pem`. Confía esa CA solo en dispositivos que controles. Si cambia la IP Wi-Fi, vuelve a generar el certificado con la IP nueva. Si no configuraste los archivos TLS, el servidor seguirá usando HTTP y debes abrir `http://IP-WIFI:3000`; HTTP y HTTPS no se pueden mezclar dentro de una misma página.
+
 Para crear el secreto de la aplicación, ejecuta `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` y pega el resultado en `JWT_SECRET` dentro de `.env`. Define también `QR_ACCESS_CODE` si vas a probar el acceso QR. No uses valores de desarrollo en producción.
 
 ```powershell

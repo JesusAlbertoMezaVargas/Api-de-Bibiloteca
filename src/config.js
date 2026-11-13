@@ -17,7 +17,11 @@ function loadConfig(env = process.env, overrides = {}) {
   const cfg = {
     nodeEnv,
     isProduction: nodeEnv === 'production',
+    // Escucha en todas las interfaces para permitir acceso desde la red local.
+    host: env.HOST || '0.0.0.0',
     port: toNumber(env.PORT, 3000),
+    tlsKeyPath: env.TLS_KEY_PATH || '',
+    tlsCertPath: env.TLS_CERT_PATH || '',
     trustProxy: env.TRUST_PROXY === 'true',
     jwtSecret: env.JWT_SECRET || '',
     redisUrl: env.REDIS_URL || (nodeEnv === 'development' ? 'redis://127.0.0.1:6379' : ''),
@@ -31,6 +35,9 @@ function loadConfig(env = process.env, overrides = {}) {
     ...overrides,
   };
 
+  if (Boolean(cfg.tlsKeyPath) !== Boolean(cfg.tlsCertPath)) {
+    throw new Error('TLS_KEY_PATH y TLS_CERT_PATH deben configurarse juntos.');
+  }
   if (cfg.isProduction && cfg.jwtSecret.length < 32) {
     throw new Error('JWT_SECRET es obligatorio en producción y debe tener al menos 32 caracteres.');
   }

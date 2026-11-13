@@ -10,7 +10,8 @@ export const CATEGORIAS = {
   admin: 'Administración',
 };
 
-const foto = (archivo, alt) => ({ src: `img/servicios/${archivo}`, alt });
+// Usa una ruta desde la raíz para que las fotos carguen igual en páginas y guías profundas.
+const foto = (archivo, alt) => ({ src: `/img/servicios/${archivo}`, alt });
 
 const estanteria = (numero, temas, fotos, extra = {}) => ({
   id: `estanteria-${numero}`,
