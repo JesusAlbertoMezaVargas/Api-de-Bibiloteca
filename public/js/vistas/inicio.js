@@ -20,7 +20,6 @@ export default {
         <p class="hero__texto">Encuentra las áreas de la Biblioteca de la Alameda y aprende a usar sus servicios desde tu teléfono.</p>
         <div class="acciones">
           <a class="boton boton--primario boton--grande" href="areas.html">${icono('mapa')}Explorar áreas</a>
-          ${usuario ? '' : html`<a class="boton boton--secundario boton--grande" href="cuenta.html">Iniciar sesión</a>`}
         </div>
       </section>
 
