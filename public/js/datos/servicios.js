@@ -438,3 +438,13 @@ export const SERVICIOS = [
 ];
 
 export const buscarServicio = (id) => SERVICIOS.find((s) => s.id === id);
+
+/**
+ * Servicios agrupados por categoría, en el orden de CATEGORIAS y sin categorías vacías.
+ * Lo usan la lista "Todos los servicios" y la leyenda del mapa 3D, para que siempre coincidan.
+ */
+export const serviciosPorCategoria = () => Object.entries(CATEGORIAS)
+  .map(([clave, nombre]) => ({ clave, nombre, servicios: SERVICIOS.filter((s) => s.categoria === clave) }))
+  .filter((g) => g.servicios.length > 0);
+
+export const textoCantidad = (n) => `${n} ${n === 1 ? 'servicio' : 'servicios'}`;
