@@ -6,7 +6,7 @@ import { mergeGeometries } from '../../vendor/three.bundle.js';
 import * as tx from './texturas.js';
 import {
   ALTO_MURO, ALTO_TAPANCO, ALTO_TECHO, ANCHO, CUARTOS, ESTANTERIAS, FONDO, HERRADURA,
-  MESAS_REDONDAS, TAPANCO, m, p,
+  MESAS_REDONDAS, PUERTA_AULA, PUERTA_MODULO, TAPANCO, m, p,
 } from './distribucion.js';
 
 const azar = tx.azarCon(101);
@@ -164,22 +164,31 @@ function mesaRedonda(l, huellas, sillas, x, z) {
   huellas.push({ x, z, r: 0.85, difuso: 0.55 });
 }
 
-function mesaRecta(l, huellas, sillas, x, z, { largo = 1.8, conSillas = true, cubierta } = {}) {
-  const fondo = 1.0;
-  l.caja(cubierta ?? l.mat.cubierta, x, 0.72, z, largo, 0.035, fondo);
-  l.caja(l.mat.negro, x, 0.712, z, largo + 0.012, 0.012, fondo + 0.012);
+/**
+ * Mesa rectangular con patas de placa. El largo va sobre x local; `giro` la rota sobre su centro.
+ * `lados` dice de qué lado del fondo van las sillas (-1, 1 o ambos).
+ */
+function mesaRecta(l, huellas, sillas, x, z, {
+  largo = 1.8, fondo = 1.0, alto = 0.72, giro = 0, lados = [-1, 1], conSillas = true, cubierta,
+} = {}) {
+  const [cos, sen] = [Math.cos(giro), Math.sin(giro)];
+  const en = (dx, dz) => [x + dx * cos + dz * sen, z - dx * sen + dz * cos];
+  l.caja(cubierta ?? l.mat.cubierta, x, alto, z, largo, 0.035, fondo, giro);
+  l.caja(l.mat.negro, x, alto - 0.008, z, largo + 0.012, 0.012, fondo + 0.012, giro);
   for (const lado of [-1, 1]) {
-    l.caja(l.mat.gris, x + (lado * largo) / 2 - lado * 0.16, 0.04, z, 0.1, 0.68, 0.34);
-    l.caja(l.mat.gris, x + (lado * largo) / 2 - lado * 0.16, 0, z, 0.1, 0.05, 0.86);
+    const [px, pz] = en((lado * largo) / 2 - lado * 0.16, 0);
+    l.caja(l.mat.gris, px, 0.04, pz, 0.1, alto - 0.04, Math.min(0.34, fondo - 0.2), giro);
+    l.caja(l.mat.gris, px, 0, pz, 0.1, 0.05, fondo - 0.14, giro);
   }
   if (conSillas) {
-    for (const lado of [-1, 1]) {
+    for (const lado of lados) {
       for (const dx of [-largo / 4, largo / 4]) {
-        l.agregar(l.mat.plasticoNegro, sillas, matriz(x + dx, 0, z + lado * (fondo / 2 + 0.2), lado > 0 ? Math.PI : 0));
+        const [sx, sz] = en(dx, lado * (fondo / 2 + 0.2));
+        l.agregar(l.mat.plasticoNegro, sillas, matriz(sx, 0, sz, (lado > 0 ? Math.PI : 0) + giro));
       }
     }
   }
-  huellas.push({ x, z, w: largo + 0.1, d: fondo + 0.5, difuso: 0.45 });
+  huellas.push({ x, z, w: largo + 0.1, d: fondo + 0.5, giro, difuso: 0.45 });
 }
 
 /**
@@ -536,10 +545,16 @@ function ludoteca(l, huellas) {
   huellas.push({ x: c.x1 + 0.7, z: c.z2 - 1, w: 3.5, d: 0.6, giro: Math.PI / 2 + 0.25, difuso: 0.4 });
 }
 
+// Columnas de mesas del Salón Argüello (x del croquis). Van en pares entre las puertas de
+// Caballeros (475), la oficina central (680) y Damas (885), para dejar libre un pasillo
+// frente a cada puerta; la primera se recorre a 420 para no chocar con las mesas de Consulta.
+const COLUMNAS_SALON = [420, 542, 612, 747, 817, 950, 1020];
+
 function salon(l, huellas, sillas) {
-  // Dos filas de mesas de trabajo, como en la foto del Salón Argüello
-  for (const py of [230, 300]) {
-    for (let px = 410; px <= 930; px += 104) {
+  // Dos filas alineadas de mesas rectangulares con sillas a ambos lados, en el área abierta
+  // entre el muro de los baños y las cabeceras de las estanterías, como en las fotos.
+  for (const py of [232, 306]) {
+    for (const px of COLUMNAS_SALON) {
       const q = p(px, py);
       mesaRecta(l, huellas, sillas, q.x, q.z);
     }
@@ -663,19 +678,24 @@ function cuartos(l, huellas, sillas, malla, solidos) {
     monitor(l, x, 0.76, z, Math.PI / 2);
   }
 
-  // Aula de trabajo: mesas sueltas y la mesa en L del croquis
+  // Aula de trabajo: espacio despejado con cristal al fondo (poniente) y a la izquierda (sur),
+  // como en la foto. Mesas largas y angostas pegadas al cristal sur con sillas de un solo lado,
+  // una mesa suelta frente al cristal del fondo y dos mesas altas; el centro queda libre.
   const au = esquinas(CUARTOS.aula);
-  // Cerrado por arriba (ahí están las oficinas); se entra solo desde la sala.
+  // Cerrado por arriba (ahí están las oficinas). Su única puerta está en el muro este, en el
+  // tramo que da a la sala junto a la esquina con el Módulo digital; hacia el módulo es muro.
   muroInterior(l, huellas, au.x1, au.z1, au.x2, au.z1);
-  muroConPuerta(l, huellas, au.x2, au.z1, au.x2, au.z2, 2.4, 1.3);
-  for (const [dx, dz] of [[1.6, 1.6], [4.2, 1.6], [1.6, 3.7], [4.2, 3.7]]) mesaRecta(l, huellas, sillas, au.x1 + dx, au.z1 + dz, { largo: 1.6 });
-  l.caja(l.mat.cabinete, au.x1 + 2, 0.72, au.z2 - 0.65, 3.4, 0.04, 0.8);
-  l.caja(l.mat.cabinete, au.x1 + 0.6, 0.72, au.z2 - 1.5, 0.8, 0.04, 1.2);
-  l.caja(l.mat.negro, au.x1 + 2, 0, au.z2 - 0.65, 3.2, 0.72, 0.05);
+  muroConPuerta(l, huellas, au.x2, au.z1, au.x2, au.z2, PUERTA_AULA, 1.1);
+  for (let i = 0; i < 3; i++) {
+    mesaRecta(l, huellas, sillas, au.x1 + 1.25 + i * 1.65, au.z2 - 0.65, { largo: 1.6, fondo: 0.6, lados: [-1] });
+  }
+  mesaRecta(l, huellas, sillas, au.x1 + 1.2, au.z1 + 3.4, { largo: 1.6, fondo: 0.6, giro: Math.PI / 2, lados: [1] });
+  mesaRecta(l, huellas, sillas, au.x1 + 0.9, au.z1 + 1.2, { largo: 1.2, fondo: 0.55, alto: 1.0, giro: Math.PI / 2, conSillas: false });
+  mesaRecta(l, huellas, sillas, au.x1 + 3.0, au.z1 + 0.75, { largo: 1.2, fondo: 0.55, alto: 1.0, conSillas: false });
 
-  // Módulo digital
+  // Módulo digital: una sola puerta en su muro norte, junto a la esquina con el Aula de trabajo.
   const mo = esquinas(CUARTOS.modulo);
-  muroConPuerta(l, huellas, mo.x1, mo.z1, mo.x2, mo.z1, 6.6, 1.4);
+  muroConPuerta(l, huellas, mo.x1, mo.z1, mo.x2, mo.z1, PUERTA_MODULO, 1.2);
   muroInterior(l, huellas, mo.x2, mo.z1, mo.x2, mo.z2);
   const mesa = esquinas([250, 905, 405, 985]);
   for (const fila of [mesa.z1 + 0.6, mesa.z2 - 0.6]) {
@@ -690,8 +710,9 @@ function cuartos(l, huellas, sillas, malla, solidos) {
     huellas.push({ x: mesa.cx, z: fila, w: mesa.w, d: 1.6, difuso: 0.4 });
   }
 
-  // Guardia: mostrador de madera en el área abierta, a la izquierda de la entrada, con el muro
-  // del Módulo digital detrás, el garrafón junto al cristal y el ventilador, como en la foto.
+  // Guardia: mostrador de madera en el área abierta, a la izquierda de la entrada. Corre a lo
+  // largo de todo el muro este del Módulo digital, que le queda detrás, con el garrafón junto
+  // al cristal y el ventilador, como en la foto.
   const gu = esquinas(CUARTOS.guardia);
   const frente = gu.x1 + 1.35;
   l.caja(l.mat.mostrador, frente, 0.05, gu.cz, 0.5, 1.05, gu.d);
@@ -701,7 +722,7 @@ function cuartos(l, huellas, sillas, malla, solidos) {
   l.agregar(l.mat.plasticoNegro, sillas, matriz(gu.x1 + 0.7, 0, gu.cz, Math.PI / 2));
   l.cilindro(l.mat.azulExhibidor, gu.x1 + 0.45, 0.85, gu.z2 - 0.35, 0.14, 0.42, 0.14, 16);
   l.caja(l.mat.negro, gu.x1 + 0.45, 0, gu.z2 - 0.35, 0.34, 0.85, 0.34);
-  ventilador(l, gu.x1 + 0.5, gu.z1 + 0.3);
+  ventilador(l, gu.x1 + 0.45, gu.cz - 1.2); // entre la silla y el regreso norte del mostrador
   huellas.push({ x: frente, z: gu.cz, w: 0.6, d: gu.d, difuso: 0.4 });
   solidos.push(cajaPlana(frente - 0.3, gu.z1, frente + 0.3, gu.z2));
 
@@ -730,14 +751,21 @@ function cuartos(l, huellas, sillas, malla, solidos) {
   muroInterior(l, huellas, od.x1, od.z2, od.x2, od.z2);
   l.caja(l.mat.cabinete, od.cx, 0.72, od.cz, 1, 0.04, 1.6);
 
-  // Baños: cubos blancos pegados al muro del fondo, con letrero
+  // Baños: cubos blancos pegados al cristal del fondo, con letrero. Junto con la oficina central
+  // forman un solo bloque que sube hasta el techo, al nivel del cristal, como en las fotos.
+  const hastaTecho = { alto: ALTO_TECHO };
+  // El bloque es un macizo cerrado: su muro trasero va pegado a la cara interior de las columnas
+  // de la fachada (0.2 m dentro del cristal), así que los laterales empiezan ahí y no las cruzan.
+  const ATRAS_BLOQUE = -FONDO / 2 + 0.2;
+  const GROSOR_MURO = 0.14;
   const bano = (r, texto) => {
     const b = esquinas(r);
-    muroInterior(l, huellas, b.x1, b.z1, b.x1, b.z2);
-    muroInterior(l, huellas, b.x2, b.z1, b.x2, b.z2);
-    muroConPuerta(l, huellas, b.x1, b.z2, b.x2, b.z2, b.w / 2, 1);
+    muroInterior(l, huellas, b.x1, ATRAS_BLOQUE, b.x1, b.z2, hastaTecho);
+    muroInterior(l, huellas, b.x2, ATRAS_BLOQUE, b.x2, b.z2, hastaTecho);
+    muroConPuerta(l, huellas, b.x1, b.z2, b.x2, b.z2, b.w / 2, 1, hastaTecho);
     l.caja(l.mat.pisoCuarto, b.cx, 0.005, b.cz, b.w - 0.14, 0.01, b.d - 0.14);
-    for (const dx of [-0.8, 0, 0.8]) l.caja(l.mat.muroFino, b.cx + dx, 0, b.z1 + 0.4, 0.42, 0.45, 0.55);
+    // Muebles de baño delante del muro trasero (antes quedaban en b.z1 + 0.4 y lo atravesarían)
+    for (const dx of [-0.8, 0, 0.8]) l.caja(l.mat.muroFino, b.cx + dx, 0, ATRAS_BLOQUE + GROSOR_MURO + 0.3, 0.42, 0.45, 0.55);
     const letrero = new THREE.Mesh(
       new THREE.PlaneGeometry(0.8, 0.26),
       new THREE.MeshStandardMaterial({ map: tx.cartel([{ texto, tam: 120 }], { proporcion: 3 }), roughness: 0.5 }),
@@ -750,7 +778,16 @@ function cuartos(l, huellas, sillas, malla, solidos) {
 
   // Entre los baños: oficina con el cuarto de servidores. Solo la barda y su puerta, vacía.
   const ofCentro = esquinas(CUARTOS.oficinaCentro);
-  muroConPuerta(l, huellas, ofCentro.x1, ofCentro.z2, ofCentro.x2, ofCentro.z2, ofCentro.w / 2, 1);
+  muroConPuerta(l, huellas, ofCentro.x1, ofCentro.z2, ofCentro.x2, ofCentro.z2, ofCentro.w / 2, 1, hastaTecho);
+
+  // Cierre del bloque (de Caballeros a Damas): muro trasero contra las columnas del cristal y
+  // tapa a la altura del techo. Desde la maqueta ya no se ve el interior en sombra: todo el
+  // fondo del bloque se lee como pared blanca pegada al cristal.
+  const bloque = esquinas([CUARTOS.banoHombres[0], CUARTOS.banoHombres[1], CUARTOS.banoMujeres[2], CUARTOS.banoMujeres[3]]);
+  const zTrasero = ATRAS_BLOQUE + GROSOR_MURO / 2;
+  muroInterior(l, huellas, bloque.x1 - GROSOR_MURO / 2, zTrasero, bloque.x2 + GROSOR_MURO / 2, zTrasero, hastaTecho);
+  const fondoTapa = bloque.z2 + GROSOR_MURO / 2 - ATRAS_BLOQUE;
+  l.caja(l.mat.muro, bloque.cx, ALTO_TECHO - 0.15, ATRAS_BLOQUE + fondoTapa / 2, bloque.w + GROSOR_MURO, 0.15, fondoTapa);
 
   // Salida de emergencia, en el muro del fondo
   const sa = esquinas([1120, 90, 1195, 100]);
@@ -815,8 +852,9 @@ function acervoLateral(l, huellas, sillas, malla) {
       }),
       l.mat.aceroClaro],
   );
-  const centro = p(668, 165);
-  panel.position.set(centro.x, 5, centro.z);
+  // Pegado al frente del bloque de baños (muro en py 190, 0.14 m de grueso), del lado de la sala.
+  const centro = p(668, 190);
+  panel.position.set(centro.x, 5, centro.z + 0.07 + 0.015 + 0.005);
   panel.castShadow = true;
   malla.add(panel);
 }

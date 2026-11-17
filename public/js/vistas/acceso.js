@@ -1,8 +1,11 @@
 import { html, pintar } from '../html.js';
 import { api } from '../api.js';
+import { icono } from '../iconos.js';
 import {
-  conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
+  alerta, conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
 } from '../ui.js';
+import { crearEscanerQr, problemaDeSoporte } from '../qr/escaner.js';
+import { onQrLeido } from '../qr/onQrLeido.js';
 
 export default {
   titulo: 'Acceso con QR',
@@ -15,6 +18,20 @@ export default {
 
       <div class="dividido">
         <form class="formulario" novalidate>
+          <div class="escaner">
+            <button type="button" class="boton boton--secundario boton--bloque" data-escanear>${icono('qr')}Escanear QR</button>
+            <div class="escaner__visor" data-visor hidden>
+              <div class="escaner__marco">
+                <video class="escaner__video" playsinline muted autoplay aria-label="Vista de la cámara"></video>
+                <div class="escaner__guia" aria-hidden="true"></div>
+              </div>
+              <p class="escaner__estado" data-estado role="status"></p>
+              <button type="button" class="boton boton--secundario boton--bloque" data-cancelar>Cerrar cámara</button>
+            </div>
+            <div data-mensaje-escaner></div>
+            <p class="escaner__o" aria-hidden="true"><span>o escribe el código</span></p>
+          </div>
+
           <div class="campo">
             <label for="codigo">Código de acceso</label>
             <input id="codigo" name="codigo" type="text" autocomplete="off" autocapitalize="characters"
@@ -52,6 +69,70 @@ export default {
         mostrarErroresDeApi(formulario, error);
       }
     };
+
+    // --- Escáner de QR con la cámara -------------------------------------------------------
+    const botonEscanear = formulario.querySelector('[data-escanear]');
+    const visor = formulario.querySelector('[data-visor]');
+    const estado = formulario.querySelector('[data-estado]');
+    const mensaje = formulario.querySelector('[data-mensaje-escaner]');
+    const campoCodigo = formulario.elements.codigo;
+
+    const cerrarVisor = () => {
+      escaner.detener();
+      visor.hidden = true;
+      botonEscanear.hidden = false;
+    };
+
+    const escaner = crearEscanerQr(visor.querySelector('video'), {
+      alLeer(texto) {
+        // La cámara ya está apagada. El texto se muestra, se pone en el campo existente (así
+        // "Validar acceso" sigue funcionando igual) y se entrega a onQrLeido.
+        cerrarVisor();
+        pintar(mensaje, alerta('exito', html`
+          <p>Código leído:</p>
+          <p class="escaner__texto">${texto}</p>`, { rol: 'status' }));
+        campoCodigo.value = texto;
+        limpiarErrores(formulario);
+        campoCodigo.focus();
+        onQrLeido(texto);
+      },
+    });
+
+    const mostrarErrorCamara = (error) => {
+      cerrarVisor();
+      pintar(mensaje, alerta('error', html`<p>${error.message}</p>`, { rol: 'alert' }));
+    };
+
+    botonEscanear.addEventListener('click', async () => {
+      pintar(mensaje, '');
+      const problema = problemaDeSoporte();
+      if (problema) {
+        mostrarErrorCamara(problema);
+        campoCodigo.focus();
+        return;
+      }
+      botonEscanear.hidden = true;
+      visor.hidden = false;
+      estado.textContent = 'Abriendo la cámara… Si el navegador lo pide, permite el acceso.';
+      formulario.querySelector('[data-cancelar]').focus();
+      try {
+        await escaner.iniciar();
+        if (escaner.activo) estado.textContent = 'Pon el código QR dentro del recuadro. Se lee solo.';
+      } catch (error) {
+        mostrarErrorCamara(error.name === 'ErrorCamara' ? error : { message: 'No se pudo abrir la cámara. Puedes escribir el código a mano.' });
+        campoCodigo.focus();
+      }
+    });
+
+    formulario.querySelector('[data-cancelar]').addEventListener('click', () => {
+      cerrarVisor();
+      botonEscanear.focus();
+    });
+
+    // Si la persona cambia de pestaña o sale de la página, la cámara no se queda encendida.
+    const alOcultar = () => { if (!visor.hidden) cerrarVisor(); };
+    document.addEventListener('visibilitychange', () => { if (document.hidden) alOcultar(); });
+    window.addEventListener('pagehide', alOcultar);
 
     formulario.addEventListener('submit', (e) => {
       e.preventDefault();

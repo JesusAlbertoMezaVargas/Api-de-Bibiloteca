@@ -1,5 +1,7 @@
 import { html, pintar } from '../html.js';
-import { CATEGORIAS, SERVICIOS, buscarServicio } from '../datos/servicios.js';
+import {
+  CATEGORIAS, SERVICIOS, buscarServicio, serviciosPorCategoria, textoCantidad,
+} from '../datos/servicios.js';
 import { icono } from '../iconos.js';
 import { alerta, encabezadoPagina, tarjetaEnlace } from '../ui.js';
 
@@ -118,7 +120,7 @@ const planoRespaldo = () => html`
 
 // Recorrido a la altura de los ojos: está completo en mapa3d/visor.js (modo 'recorrer'),
 // pero todavía no se publica. Para mostrar el botón "Recorrer", cambia esto a true.
-const RECORRIDO_ACTIVO = false;
+const RECORRIDO_ACTIVO = true;
 
 const MODOS = [
   { clave: 'maqueta', texto: 'Maqueta' },
@@ -131,6 +133,24 @@ const AYUDAS = {
   planta: 'Arrastra para moverte y pellizca para acercar. Toca un punto o un área.',
   recorrer: 'Arrastra para mirar alrededor y toca el piso para caminar hasta ahí.',
 };
+
+// Leyenda del mapa 3D: versión compacta de "Todos los servicios". Sale de los mismos datos y
+// usa las mismas clases de color que los marcadores (marcador--<categoría>) y que las etiquetas
+// de la lista (servicios-grupo--<categoría>), así que si cambia una categoría, cambia sola.
+const leyendaMapa = () => html`
+  <div class="visor-leyenda">
+    <div class="visor-leyenda__panel" id="leyenda-mapa" data-leyenda-panel hidden>
+      <ul class="visor-leyenda__lista">
+        ${serviciosPorCategoria().map(({ clave, nombre, servicios }) => html`
+          <li class="visor-leyenda__fila servicios-grupo--${clave}">
+            <span class="visor-leyenda__punto marcador--${clave}" aria-hidden="true"></span>
+            <span class="visor-leyenda__nombre">${nombre}</span>
+            <span class="servicios-grupo__cantidad">${textoCantidad(servicios.length)}</span>
+          </li>`)}
+      </ul>
+    </div>
+    <button type="button" class="visor__boton" data-leyenda aria-expanded="false" aria-controls="leyenda-mapa">Leyenda</button>
+  </div>`;
 
 const visor3d = () => html`
   <div class="visor" data-visor>
@@ -157,6 +177,7 @@ const visor3d = () => html`
       <div class="visor__modos" role="group" aria-label="Vista de la maqueta">
         ${MODOS.map((m) => html`<button type="button" class="visor__boton" data-modo="${m.clave}" aria-pressed="${m.clave === 'maqueta'}">${m.texto}</button>`)}
       </div>
+      ${leyendaMapa()}
     </div>
   </div>
   <p class="plano-ayuda" data-ayuda>${AYUDAS.maqueta}</p>`;
@@ -177,6 +198,16 @@ async function montarVisor(panel) {
   const destino = panel.querySelector('[data-destino]');
   const ayuda = panel.querySelector('[data-ayuda]');
   const usarRespaldo = () => pintar(panel, planoRespaldo());
+
+  // Leyenda: abierta en computadora y cerrada en celular, para no tapar el mapa.
+  const botonLeyenda = panel.querySelector('[data-leyenda]');
+  const panelLeyenda = panel.querySelector('[data-leyenda-panel]');
+  const ponerLeyenda = (abierta) => {
+    panelLeyenda.hidden = !abierta;
+    botonLeyenda.setAttribute('aria-expanded', String(abierta));
+  };
+  ponerLeyenda(matchMedia('(min-width: 768px)').matches);
+  botonLeyenda.addEventListener('click', () => ponerLeyenda(panelLeyenda.hidden));
 
   try {
     // Three.js pesa: solo se descarga en esta página y después de pintar el resto.
@@ -234,15 +265,12 @@ export default {
       <section class="seccion" aria-labelledby="titulo-lista">
         <h2 id="titulo-lista" class="seccion__titulo">Todos los servicios</h2>
         <div class="servicios-grupos">
-          ${Object.entries(CATEGORIAS).map(([clave, nombre]) => {
-            const grupo = SERVICIOS.filter((s) => s.categoria === clave);
-            if (!grupo.length) return '';
-            return html`
+          ${serviciosPorCategoria().map(({ clave, nombre, servicios: grupo }) => html`
               <details class="servicios-grupo servicios-grupo--${clave}">
                 <summary class="servicios-grupo__cabecera">
                   <span class="servicios-grupo__indicador" aria-hidden="true"></span>
                   <span class="servicios-grupo__titulo">${nombre}</span>
-                  <span class="servicios-grupo__cantidad">${grupo.length} ${grupo.length === 1 ? 'servicio' : 'servicios'}</span>
+                  <span class="servicios-grupo__cantidad">${textoCantidad(grupo.length)}</span>
                   <span class="servicios-grupo__flecha" aria-hidden="true">›</span>
                 </summary>
                 <div class="servicios-grupo__contenido">
@@ -250,8 +278,7 @@ export default {
                     ${grupo.map((s) => html`<li>${tarjetaEnlace({ href: enlace(s.id), icono: 'ubicacion', titulo: s.nombre, texto: s.detalle, accion: 'Ver guía' })}</li>`)}
                   </ul>
                 </div>
-              </details>`;
-          })}
+              </details>`)}
         </div>
       </section>`);
 

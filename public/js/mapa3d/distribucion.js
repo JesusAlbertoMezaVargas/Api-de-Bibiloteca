@@ -22,8 +22,11 @@ export const p = (px, py) => ({
 export const CUARTOS = {
   oficinas: [105, 90, 185, 780],
   aula: [10, 780, 205, 1015],
-  modulo: [205, 790, 465, 1015],
-  guardia: [465, 885, 540, 975],
+  // El muro norte del módulo queda 1.8 m al sur del muro norte del aula: en ese tramo del
+  // muro este del aula está su puerta, que da a la sala.
+  modulo: [205, 840, 465, 1015],
+  // El guardia ocupa todo el muro este del módulo, hasta el cristal sur.
+  guardia: [465, 840, 540, 1008],
   entrada: [640, 840, 770, 1015],
   especial: [1425, 730, 1570, 1015],
   oficinaDerecha: [1490, 550, 1570, 700],
@@ -31,6 +34,11 @@ export const CUARTOS = {
   banoHombres: [425, 90, 525, 190],
   banoMujeres: [835, 90, 935, 190],
 };
+
+// Centro de cada puerta, en metros desde la esquina donde se juntan el aula y el módulo:
+// la del aula sobre su muro este (desde su esquina norte) y la del módulo sobre su muro norte.
+export const PUERTA_AULA = 0.9;
+export const PUERTA_MODULO = 1.0;
 
 export const TAPANCO = [1255, 90, 1570, 510];
 
@@ -55,13 +63,14 @@ export const MESAS_REDONDAS = [
 // (los números bajos se quedan). `zona` es el rectángulo que responde al toque en la maqueta y
 // `desde`, opcional, el punto donde se para la cámara al recorrer.
 export const PUNTOS = [
-  { id: 'salon-arguello', px: 668, py: 265, y: 1.6, orden: 1, zona: [360, 190, 975, 340] },
+  { id: 'salon-arguello', px: 668, py: 265, y: 1.6, orden: 1, zona: [360, 190, 1055, 340] },
   { id: 'ludoteca', px: 1400, py: 330, y: 1.5, orden: 1, zona: [1255, 200, 1570, 510] },
   { id: 'eventos', px: 1410, py: 230, y: 5.1, orden: 1, nivel: 'alta', zona: [1255, 90, 1570, 510] },
   { id: 'recepcion', px: 900, py: 790, y: 1.9, orden: 1, zona: [810, 735, 1025, 985] },
   { id: 'prestamo', px: 1150, py: 860, y: 1.9, orden: 1, zona: [1070, 730, 1240, 1015] },
-  { id: 'modulo-digital', px: 330, py: 900, y: 1.8, orden: 1, zona: CUARTOS.modulo },
-  { id: 'aula-trabajo', px: 105, py: 890, y: 1.8, orden: 1, zona: CUARTOS.aula },
+  // Junto a su puerta, por dentro; al recorrer, la cámara se para afuera viendo la puerta.
+  { id: 'modulo-digital', px: 238, py: 875, y: 1.8, orden: 1, zona: CUARTOS.modulo, desde: [238, 785] },
+  { id: 'aula-trabajo', px: 180, py: 810, y: 1.8, orden: 1, zona: CUARTOS.aula, desde: [262, 810] },
   { id: 'espacio-especial', px: 1500, py: 870, y: 1.8, orden: 1, zona: CUARTOS.especial },
   { id: 'consulta', px: 300, py: 150, y: 2.3, orden: 2, zona: [190, 90, 425, 330] },
   { id: 'estanteria-4', px: 680, py: 430, y: 2.5, orden: 2, zona: [555, 365, 805, 535] },

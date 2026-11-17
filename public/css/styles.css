@@ -244,19 +244,52 @@ a:hover { text-decoration-thickness: 2px; }
   color: var(--c-texto);
   text-decoration: none;
 }
+/* Logo de Solón Argüello: máscara que toma el color del texto en cada tema */
 .marca__logo {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-md);
-  background: var(--c-primario);
-  color: var(--c-sobre-primario);
+  display: block;
+  width: 124px;
+  height: 50px;
+  background: var(--c-texto);
+  -webkit-mask: url("../img/logos/solon-arguello.png") left center / contain no-repeat;
+          mask: url("../img/logos/solon-arguello.png") left center / contain no-repeat;
 }
-.marca__logo .icono { width: 24px; height: 24px; }
-.marca__texto { display: grid; line-height: 1.2; }
-.marca__nombre { font-weight: 700; font-size: var(--t-base); }
-.marca__lugar { font-size: var(--t-xs); color: var(--c-texto-2); }
+
+/* Logos del encabezado: Solón Argüello siempre completo; los de Nayarit se encogen (sin
+   deformarse) cuando falta espacio, para no empujar el menú. */
+.marcas {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.marcas .marca { flex: none; }
+.marcas__divisor {
+  flex: none;
+  width: 1px;
+  height: 36px;
+  background: var(--c-borde);
+}
+.marcas__aliado {
+  display: block;
+  width: 233px;      /* 40 px de alto con la proporción del logo (1200 × 206) */
+  max-width: 100%;
+  height: auto;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+/* Imágenes con versión para cada tema */
+.tema-oscuro { display: none; }
+:root[data-tema="oscuro"] .tema-claro { display: none; }
+:root[data-tema="oscuro"] .tema-oscuro { display: block; }
+
+/* Con el menú en el encabezado y letra muy grande no queda espacio para el logo de Nayarit:
+   se oculta antes de que se vuelva ilegible. Solón Argüello y el menú se quedan. */
+@media (min-width: 960px) and (max-width: 1199px) {
+  :root[data-letra="muy_grande"] .marcas__divisor,
+  :root[data-letra="muy_grande"] .marcas__aliado { display: none; }
+}
 
 .pagina {
   flex: 1;
@@ -273,16 +306,53 @@ a:hover { text-decoration-thickness: 2px; }
   color: var(--c-texto-2);
   font-size: var(--t-sm);
 }
+/* En celular, créditos y logos uno debajo del otro y centrados; en pantallas anchas, en fila. */
 .pie__interior {
   max-width: var(--ancho-max);
   margin: 0 auto;
   padding: var(--e-5) var(--e-4);
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--e-2) var(--e-5);
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--e-5);
 }
 .pie p { margin: 0; }
+.pie__titulo {
+  margin-bottom: var(--e-2);
+  font-size: var(--t-sm);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--c-texto-2);
+}
+.pie__nombres {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--c-texto);
+  font-size: var(--t-base);
+}
+.pie__logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--e-4);
+}
+/* Los logos traen fondo blanco: van sobre una placa blanca para verse igual en modo oscuro. */
+.pie__logo {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 76px;
+  padding: var(--e-2);
+  border-radius: var(--r-sm);
+  background: #ffffff;
+}
+@media (min-width: 600px) {
+  .pie__interior { flex-direction: row; justify-content: space-between; text-align: left; }
+  .pie__logos { justify-content: flex-end; }
+}
 
 .seccion { margin-top: var(--e-7); }
 .seccion__titulo { font-size: var(--t-xl); margin-bottom: var(--e-4); }
@@ -363,9 +433,19 @@ a:hover { text-decoration-thickness: 2px; }
   overflow: hidden;
   padding: var(--e-6) var(--e-5);
   border-radius: var(--r-lg);
-  background: linear-gradient(135deg, var(--c-hero), var(--c-hero-2));
+  background: linear-gradient(135deg, var(--c-hero), var(--c-hero-2)); /* si no carga la foto */
+  /* Fachada de la biblioteca bajo la capa verde. En celular el texto ocupa todo el ancho, así
+     que la capa es pareja; en pantallas anchas se abre a la derecha para dejar ver el edificio. */
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--c-hero) 86%, transparent),
+      color-mix(in srgb, var(--c-hero-2) 78%, transparent)),
+    url("../img/fachada.jpg") center 35% / cover no-repeat,
+    var(--c-hero);
   color: var(--c-sobre-hero);
+  text-shadow: 0 1px 3px rgb(0 0 0 / .45);
 }
+.hero .boton { text-shadow: none; }
 .hero::after { /* forma decorativa */
   content: "";
   position: absolute;
@@ -790,6 +870,48 @@ fieldset.campo > legend { margin-bottom: var(--e-2); padding: 0; }
 .alerta--construccion { border-left-color: var(--c-acento); background: var(--c-acento-suave); }
 .alerta--construccion > .icono { color: var(--c-acento); }
 
+/* Escáner de QR (Acceso QR): video de la cámara con un recuadro guía al centro */
+.escaner { display: grid; gap: var(--e-3); }
+.escaner__visor { display: grid; gap: var(--e-3); }
+.escaner__marco {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  background: #000000;
+}
+.escaner__video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.escaner__guia {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 66%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 3px solid #ffffff;
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / .45); /* oscurece todo lo que queda fuera del recuadro */
+  pointer-events: none;
+}
+.escaner__estado { margin: 0; font-size: var(--t-sm); color: var(--c-texto-2); text-align: center; }
+.escaner__texto {
+  font-weight: 700;
+  overflow-wrap: anywhere; /* los enlaces largos no desbordan en celular */
+}
+.escaner [data-mensaje-escaner] .alerta { margin-bottom: 0; }
+.escaner__o {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  margin: 0;
+  color: var(--c-texto-2);
+  font-size: var(--t-sm);
+}
+.escaner__o::before, .escaner__o::after { content: ""; flex: 1; height: 1px; background: var(--c-linea); }
+
 /* Esqueleto de carga */
 .esqueleto {
   border-radius: var(--r-sm);
@@ -1090,6 +1212,49 @@ fieldset.campo > legend { margin-bottom: var(--e-2); padding: 0; }
 .visor__modos .visor__boton[aria-pressed="true"] { background: #ffffff; color: #14171b; }
 .visor :focus-visible { outline-color: #ffffff; }
 
+/* Leyenda del mapa: abajo a la derecha, junto al selector de vistas. El panel se abre hacia
+   arriba. Los colores salen de .marcador--<categoría> y .servicios-grupo--<categoría>. */
+.visor__abajo { flex-wrap: wrap; align-items: flex-end; }
+.visor-leyenda { margin-left: auto; }
+/* Flota sobre la barra de abajo (se posiciona respecto a .visor__abajo): abrirla no mueve el
+   selector de vistas, aunque en celular el botón baje a otro renglón. */
+.visor-leyenda__panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--e-2));
+  width: max-content;
+  max-width: min(280px, 100%);
+  max-height: 45vh;
+  overflow-y: auto;
+  padding: var(--e-2) var(--e-3);
+  border: 1px solid var(--v-borde);
+  border-radius: var(--r-md);
+  background: var(--v-control);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+}
+.visor-leyenda__lista { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.visor-leyenda__fila {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--e-2);
+  padding: 3px 0;
+  font-size: var(--t-xs);
+  line-height: 1.25;
+}
+.visor-leyenda__punto {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffffff; /* igual que los marcadores del mapa */
+  border-radius: 50%;
+  background: var(--marcador);
+}
+.visor-leyenda__nombre { font-weight: 700; color: var(--v-texto); }
+.visor-leyenda .servicios-grupo__cantidad { padding: 1px 7px; }
+.visor-leyenda [data-leyenda][aria-expanded="true"] { background: #ffffff; color: #14171b; }
+.visor__ficha { z-index: 1; } /* la ficha del servicio queda encima de la leyenda abierta */
+
 .visor__ficha {
   position: absolute;
   left: var(--e-3);
@@ -1159,7 +1324,16 @@ fieldset.campo > legend { margin-bottom: var(--e-2); padding: 0; }
    ========================================================= */
 @media (min-width: 600px) {
   h1, .hero__titulo { font-size: var(--t-3xl); }
-  .hero { padding: var(--e-7) var(--e-6); }
+  .hero {
+    padding: var(--e-7) var(--e-6);
+    background:
+      linear-gradient(90deg,
+        color-mix(in srgb, var(--c-hero) 86%, transparent) 0%,
+        color-mix(in srgb, var(--c-hero) 70%, transparent) 55%,
+        color-mix(in srgb, var(--c-hero-2) 30%, transparent) 100%),
+      url("../img/fachada.jpg") center 35% / cover no-repeat,
+      var(--c-hero);
+  }
   .hero .boton { width: auto; }
   .tarjetas { grid-template-columns: repeat(2, 1fr); }
   .formulario { padding: var(--e-6); }
@@ -1170,6 +1344,7 @@ fieldset.campo > legend { margin-bottom: var(--e-2); padding: 0; }
 
   /* La navegación pasa al encabezado */
   .nav {
+    flex: none; /* el menú conserva su ancho; los logos de Nayarit son los que ceden */
     position: static;
     padding: 0;
     border: 0;
