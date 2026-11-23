@@ -1,10 +1,21 @@
 import { html, pintar } from '../html.js';
 import { icono } from '../iconos.js';
-import { CATEGORIAS, buscarServicio } from '../datos/servicios.js';
+import { obtenerPreferencias } from '../estado.js';
+import { CATEGORIAS, buscarServicio, codigoQrServicio } from '../datos/servicios.js';
 import { alerta, avisar, encabezadoPagina } from '../ui.js';
 import noEncontrada from './noEncontrada.js';
 
+const hayVoz = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 const VOLVER = { href: 'areas.html', texto: 'Plano' };
+
+function leerEnVozAlta(texto) {
+  if (!hayVoz) return;
+  window.speechSynthesis.cancel();
+  const frase = new SpeechSynthesisUtterance(texto);
+  frase.lang = 'es-MX';
+  frase.rate = obtenerPreferencias().velocidadVoz;
+  window.speechSynthesis.speak(frase);
+}
 
 export default {
   titulo: 'Servicio',
@@ -23,12 +34,25 @@ export default {
         <article class="panel lectura">
           <div class="servicio__cabecera">
             <p class="etiqueta etiqueta--${servicio.categoria}">${CATEGORIAS[servicio.categoria]}</p>
-            <button type="button" class="boton boton--primario" data-escuchar>${icono('altavoz')}Escuchar los pasos</button>
+            ${hayVoz ? html`
+              <div class="acciones">
+                <button type="button" class="boton boton--primario" data-escuchar>${icono('altavoz')}Escuchar la guía</button>
+                <button type="button" class="boton boton--secundario" data-detener>${icono('detener')}Detener</button>
+              </div>` : ''}
           </div>
 
           <p class="dato">
             ${icono('ubicacion')}
             <span><span class="dato__etiqueta">Ubicación</span><span class="dato__valor">${servicio.ubicacion}</span></span>
+          </p>
+
+          <p class="dato">
+            ${icono('qr')}
+            <span>
+              <span class="dato__etiqueta">Identificador QR del área</span>
+              <code class="dato__valor" data-codigo-qr>${codigoQrServicio(servicio.id)}</code>
+            </span>
+            <button type="button" class="boton boton--secundario dato__copiar" data-copiar-codigo>Copiar código</button>
           </p>
 
           ${servicio.nota ? alerta('construccion', html`<p>${servicio.nota}</p>`) : ''}
@@ -54,9 +78,44 @@ export default {
           </section>` : ''}
       </div>`);
 
-    // TODO: leer servicio.pasos en voz alta con speechSynthesis y la velocidad de Ajustes.
-    contenedor.querySelector('[data-escuchar]').addEventListener('click', () => {
-      avisar('La lectura en voz alta estará disponible pronto.', 'info');
+    const textoGuia = [
+      servicio.nombre,
+      servicio.detalle,
+      servicio.ubicacion,
+      servicio.resumen,
+      'Qué puedes hacer aquí',
+      ...servicio.queHacer,
+      'Paso a paso',
+      ...servicio.pasos,
+      servicio.nota,
+    ].filter(Boolean).join('. ');
+    contenedor.querySelector('[data-escuchar]')?.addEventListener('click', () => {
+      try {
+        leerEnVozAlta(textoGuia);
+      } catch {
+        avisar('No se pudo iniciar la lectura en voz alta. Inténtalo de nuevo.', 'error');
+      }
+    });
+    contenedor.querySelector('[data-detener]')?.addEventListener('click', () => window.speechSynthesis.cancel());
+    if (hayVoz && obtenerPreferencias().audioAutomatico) {
+      try {
+        leerEnVozAlta(textoGuia);
+      } catch {
+        avisar('No se pudo iniciar la lectura en voz alta.', 'error');
+      }
+    }
+    window.addEventListener('pagehide', () => {
+      if (hayVoz) window.speechSynthesis.cancel();
+    }, { once: true });
+    contenedor.querySelector('[data-copiar-codigo]').addEventListener('click', async (evento) => {
+      const boton = evento.currentTarget;
+      const codigo = codigoQrServicio(servicio.id);
+      try {
+        await navigator.clipboard.writeText(codigo);
+        boton.textContent = 'Código copiado';
+      } catch {
+        avisar(`Código: ${codigo}`, 'info');
+      }
     });
     return undefined;
   },

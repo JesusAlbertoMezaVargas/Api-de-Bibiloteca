@@ -12,11 +12,12 @@ export const encabezadoPagina = ({ titulo, entrada, volver }) => html`
   </header>`;
 
 /** Tarjeta que lleva a otra sección. `nivel` es el nivel de encabezado del título (2 o 3). */
-export const tarjetaEnlace = ({ href, icono: nombreIcono, titulo, texto, accion = 'Abrir', nivel = 3 }) => html`
+export const tarjetaEnlace = ({ href, icono: nombreIcono, titulo, texto, accion = 'Abrir', nivel = 3, codigo }) => html`
   <a class="tarjeta" href="${href}">
     ${nombreIcono ? html`<span class="tarjeta__icono">${icono(nombreIcono)}</span>` : ''}
     ${nivel === 2 ? html`<h2 class="tarjeta__titulo">${titulo}</h2>` : html`<h3 class="tarjeta__titulo">${titulo}</h3>`}
     ${texto ? html`<p class="tarjeta__texto">${texto}</p>` : ''}
+    ${codigo ? html`<code class="tarjeta__codigo" title="Código manual del área">${codigo}</code>` : ''}
     <span class="tarjeta__ir" aria-hidden="true">${accion}${icono('flecha-der')}</span>
   </a>`;
 

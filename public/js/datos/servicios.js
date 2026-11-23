@@ -439,6 +439,42 @@ export const SERVICIOS = [
 
 export const buscarServicio = (id) => SERVICIOS.find((s) => s.id === id);
 
+const CODIGOS_AREA = Object.freeze({
+  'salon-arguello': 'BIBL0001',
+  consulta: 'BIBL0002',
+  catalogo: 'BIBL0003',
+  'estanteria-1': 'BIBL0004',
+  'estanteria-2': 'BIBL0005',
+  'estanteria-3': 'BIBL0006',
+  'estanteria-4': 'BIBL0007',
+  'estanteria-5': 'BIBL0008',
+  'estanteria-6': 'BIBL0009',
+  'estanteria-7': 'BIBL0010',
+  mesas: 'BIBL0011',
+  eventos: 'BIBL0012',
+  ludoteca: 'BIBL0013',
+  comics: 'BIBL0014',
+  'aula-trabajo': 'BIBL0015',
+  'modulo-digital': 'BIBL0016',
+  guardia: 'BIBL0017',
+  recepcion: 'BIBL0018',
+  prestamo: 'BIBL0019',
+  'espacio-especial': 'BIBL0020',
+  'bano-hombres': 'BIBL0021',
+  'bano-mujeres': 'BIBL0022',
+  'salida-emergencia': 'BIBL0023',
+  oficinas: 'BIBL0024',
+});
+
+/** Código único de ocho caracteres para imprimir en el QR o ingresar manualmente. */
+export const codigoQrServicio = (id) => CODIGOS_AREA[id];
+
+export const buscarServicioPorCodigo = (codigo) => {
+  const normalizado = String(codigo ?? '').trim().toUpperCase();
+  const servicio = SERVICIOS.find((s) => CODIGOS_AREA[s.id] === normalizado);
+  return servicio;
+};
+
 /**
  * Servicios agrupados por categoría, en el orden de CATEGORIAS y sin categorías vacías.
  * Lo usan la lista "Todos los servicios" y la leyenda del mapa 3D, para que siempre coincidan.

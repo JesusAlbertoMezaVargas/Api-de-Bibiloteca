@@ -5,7 +5,7 @@ import {
   alerta, conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
 } from '../ui.js';
 import { crearEscanerQr, problemaDeSoporte } from '../qr/escaner.js';
-import { onQrLeido } from '../qr/onQrLeido.js';
+import { onQrLeido, resolverCodigoArea } from '../qr/onQrLeido.js';
 
 export default {
   titulo: 'Acceso con QR',
@@ -36,7 +36,7 @@ export default {
             <label for="codigo">Código de acceso</label>
             <input id="codigo" name="codigo" type="text" autocomplete="off" autocapitalize="characters"
                    required minlength="8" maxlength="200" aria-describedby="codigo-ayuda codigo-error">
-            <span id="codigo-ayuda" class="campo__ayuda">Tiene al menos 8 caracteres.</span>
+            <span id="codigo-ayuda" class="campo__ayuda">Escribe el código de 8 caracteres del área, por ejemplo: <code>BIBL0018</code>.</span>
             <p id="codigo-error" class="campo__error" data-error-de="codigo"></p>
           </div>
           <p class="campo__error" data-error-general role="alert"></p>
@@ -56,6 +56,10 @@ export default {
     const formulario = contenedor.querySelector('form');
 
     const validar = async (codigo) => {
+      if (resolverCodigoArea(codigo)) {
+        onQrLeido(codigo);
+        return;
+      }
       limpiarErrores(formulario);
       if (codigo.length < 8) {
         marcarError(formulario, 'codigo', 'El código del QR no es válido.');

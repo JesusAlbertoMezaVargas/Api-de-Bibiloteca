@@ -1,0 +1,25 @@
+
+Area general - Salon Arguello: BIBL0001
+Coleccion de consulta: BIBL0002
+Catalogo publico: BIBL0003
+Estanteria 1: BIBL0004
+Estanteria 2: BIBL0005
+Estanteria 3: BIBL0006
+Colegio bibliografico (Estanteria 4): BIBL0007
+Estanteria 5: BIBL0008
+Estanteria 6: BIBL0009
+Estanteria 7 - Libros donados: BIBL0010
+Mesas de lectura: BIBL0011
+Eventos y presentaciones: BIBL0012
+Area infantil - Ludoteca: BIBL0013
+Area de comics: BIBL0014
+Aula de trabajo: BIBL0015
+Modulo digital - Computadoras: BIBL0016
+Guardia: BIBL0017
+Recepcion: BIBL0018
+Prestamo de libros: BIBL0019
+Espacio especial: BIBL0020
+Bano de hombres: BIBL0021
+Bano de mujeres: BIBL0022
+Salida de emergencia: BIBL0023
+Oficinas: BIBL0024

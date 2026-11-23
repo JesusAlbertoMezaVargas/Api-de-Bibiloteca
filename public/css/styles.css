@@ -612,6 +612,20 @@ a.tarjeta:hover .tarjeta__ir .icono { transform: translateX(3px); }
 .dato .icono { color: var(--c-primario); margin-top: .15em; }
 .dato__etiqueta { display: block; font-size: var(--t-sm); color: var(--c-texto-2); }
 .dato__valor { font-weight: 700; font-size: var(--t-md); }
+.dato__copiar { margin-left: auto; flex: 0 0 auto; }
+.tarjeta__codigo {
+  display: block;
+  width: fit-content;
+  margin: var(--e-2) 0;
+  padding: 3px 8px;
+  border: 1px solid var(--c-linea);
+  border-radius: var(--r-sm);
+  background: var(--c-superficie);
+  color: var(--c-texto);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
 
 /* Pasos numerados */
 .pasos {

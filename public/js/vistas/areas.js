@@ -1,6 +1,6 @@
 import { html, pintar } from '../html.js';
 import {
-  CATEGORIAS, SERVICIOS, buscarServicio, serviciosPorCategoria, textoCantidad,
+  CATEGORIAS, SERVICIOS, buscarServicio, codigoQrServicio, serviciosPorCategoria, textoCantidad,
 } from '../datos/servicios.js';
 import { icono } from '../iconos.js';
 import { alerta, encabezadoPagina, tarjetaEnlace } from '../ui.js';
@@ -275,7 +275,14 @@ export default {
                 </summary>
                 <div class="servicios-grupo__contenido">
                   <ul class="tarjetas">
-                    ${grupo.map((s) => html`<li>${tarjetaEnlace({ href: enlace(s.id), icono: 'ubicacion', titulo: s.nombre, texto: s.detalle, accion: 'Ver guía' })}</li>`)}
+                    ${grupo.map((s) => html`<li>${tarjetaEnlace({
+                      href: enlace(s.id),
+                      icono: 'ubicacion',
+                      titulo: s.nombre,
+                      texto: s.detalle,
+                      codigo: codigoQrServicio(s.id),
+                      accion: 'Ver guía',
+                    })}</li>`)}
                   </ul>
                 </div>
               </details>`)}
