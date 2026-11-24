@@ -884,7 +884,7 @@ fieldset.campo > legend { margin-bottom: var(--e-2); padding: 0; }
 .alerta--construccion { border-left-color: var(--c-acento); background: var(--c-acento-suave); }
 .alerta--construccion > .icono { color: var(--c-acento); }
 
-/* Escáner de QR (Acceso QR): video de la cámara con un recuadro guía al centro */
+/* Escáner de QR: video de la cámara con un recuadro guía al centro */
 .escaner { display: grid; gap: var(--e-3); }
 .escaner__visor { display: grid; gap: var(--e-3); }
 .escaner__marco {

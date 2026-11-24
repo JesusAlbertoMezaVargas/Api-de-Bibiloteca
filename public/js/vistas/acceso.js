@@ -1,25 +1,25 @@
 import { html, pintar } from '../html.js';
-import { api } from '../api.js';
 import { icono } from '../iconos.js';
-import {
-  alerta, conEnvio, encabezadoPagina, enfocarPrimerError, limpiarErrores, marcarError, mostrarErroresDeApi,
-} from '../ui.js';
+import { alerta, encabezadoPagina, limpiarErrores, marcarError } from '../ui.js';
 import { crearEscanerQr, problemaDeSoporte } from '../qr/escaner.js';
-import { onQrLeido, resolverCodigoArea } from '../qr/onQrLeido.js';
+import { resolverCodigoArea } from '../qr/onQrLeido.js';
+
+const MENSAJE_QR_INVALIDO = 'No encontramos un área con ese código QR. Revisa que sea el código de un área de la biblioteca.';
 
 export default {
-  titulo: 'Acceso con QR',
-  render(contenedor, { consulta, navegar }) {
+  titulo: 'Buscar por QR',
+  render(contenedor, { consulta }) {
+    document.title = 'Buscar por QR · Biblioteca de la Alameda';
     pintar(contenedor, html`
       ${encabezadoPagina({
-        titulo: 'Acceso con código QR',
-        entrada: 'Escanea con la cámara de tu teléfono el código QR de la entrada. Si no puedes, escribe el código que aparece debajo de él.',
+        titulo: 'Busca información por QR',
+        entrada: 'Escanea el código QR de un área de la biblioteca para consultar su información y guía de uso.',
       })}
 
       <div class="dividido">
         <form class="formulario" novalidate>
           <div class="escaner">
-            <button type="button" class="boton boton--secundario boton--bloque" data-escanear>${icono('qr')}Escanear QR</button>
+            <button type="button" class="boton boton--secundario boton--bloque" data-escanear>${icono('qr')}Escanear QR del área</button>
             <div class="escaner__visor" data-visor hidden>
               <div class="escaner__marco">
                 <video class="escaner__video" playsinline muted autoplay aria-label="Vista de la cámara"></video>
@@ -29,57 +29,55 @@ export default {
               <button type="button" class="boton boton--secundario boton--bloque" data-cancelar>Cerrar cámara</button>
             </div>
             <div data-mensaje-escaner></div>
-            <p class="escaner__o" aria-hidden="true"><span>o escribe el código</span></p>
+            <p class="escaner__o" aria-hidden="true"><span>o busca con el código</span></p>
           </div>
 
           <div class="campo">
-            <label for="codigo">Código de acceso</label>
+            <label for="codigo">Código o contenido del QR</label>
             <input id="codigo" name="codigo" type="text" autocomplete="off" autocapitalize="characters"
-                   required minlength="8" maxlength="200" aria-describedby="codigo-ayuda codigo-error">
-            <span id="codigo-ayuda" class="campo__ayuda">Escribe el código de 8 caracteres del área, por ejemplo: <code>BIBL0018</code>.</span>
+                   required maxlength="200" aria-describedby="codigo-ayuda codigo-error">
+            <span id="codigo-ayuda" class="campo__ayuda">Puedes escribir el identificador impreso, por ejemplo: <code>BIBL0001</code>.</span>
             <p id="codigo-error" class="campo__error" data-error-de="codigo"></p>
           </div>
-          <p class="campo__error" data-error-general role="alert"></p>
-          <button type="submit" class="boton boton--primario boton--bloque">Validar acceso</button>
+          <button type="submit" class="boton boton--primario boton--bloque">Buscar área</button>
         </form>
 
         <aside class="panel lectura" aria-labelledby="titulo-ayuda-qr">
-          <h2 id="titulo-ayuda-qr" class="panel__titulo">¿Dónde está el código?</h2>
+          <h2 id="titulo-ayuda-qr" class="panel__titulo">¿Cómo buscar un área?</h2>
           <ol class="pasos">
-            <li><span>Busca el cartel con el código QR en la entrada de la biblioteca.</span></li>
-            <li><span>Abre la cámara de tu teléfono y apúntala al código.</span></li>
-            <li><span>Toca el enlace que aparece. Si no aparece, escribe aquí el código impreso.</span></li>
+            <li><span>Busca el código QR colocado en el área que quieres conocer.</span></li>
+            <li><span>Toca «Escanear QR del área» y permite el acceso a la cámara.</span></li>
+            <li><span>Apunta al código; al leerlo, se abrirá la información del área.</span></li>
           </ol>
+          <p>También puedes escribir el identificador que aparece junto al código QR.</p>
         </aside>
       </div>`);
 
     const formulario = contenedor.querySelector('form');
-
-    const validar = async (codigo) => {
-      if (resolverCodigoArea(codigo)) {
-        onQrLeido(codigo);
-        return;
-      }
-      limpiarErrores(formulario);
-      if (codigo.length < 8) {
-        marcarError(formulario, 'codigo', 'El código del QR no es válido.');
-        enfocarPrimerError(formulario);
-        return;
-      }
-      try {
-        await conEnvio(formulario, () => api.validarQr(codigo));
-        navegar('areas.html', 'Acceso validado. ¡Te damos la bienvenida!');
-      } catch (error) {
-        mostrarErroresDeApi(formulario, error);
-      }
-    };
-
-    // --- Escáner de QR con la cámara -------------------------------------------------------
     const botonEscanear = formulario.querySelector('[data-escanear]');
     const visor = formulario.querySelector('[data-visor]');
     const estado = formulario.querySelector('[data-estado]');
     const mensaje = formulario.querySelector('[data-mensaje-escaner]');
     const campoCodigo = formulario.elements.codigo;
+
+    const buscar = (texto) => {
+      limpiarErrores(formulario);
+      if (!texto) {
+        marcarError(formulario, 'codigo', 'Escribe o escanea el código QR de un área.');
+        campoCodigo.focus();
+        return false;
+      }
+
+      const destino = resolverCodigoArea(texto);
+      if (!destino) {
+        marcarError(formulario, 'codigo', MENSAJE_QR_INVALIDO);
+        campoCodigo.focus();
+        return false;
+      }
+
+      location.assign(destino);
+      return true;
+    };
 
     const cerrarVisor = () => {
       escaner.detener();
@@ -89,16 +87,9 @@ export default {
 
     const escaner = crearEscanerQr(visor.querySelector('video'), {
       alLeer(texto) {
-        // La cámara ya está apagada. El texto se muestra, se pone en el campo existente (así
-        // "Validar acceso" sigue funcionando igual) y se entrega a onQrLeido.
         cerrarVisor();
-        pintar(mensaje, alerta('exito', html`
-          <p>Código leído:</p>
-          <p class="escaner__texto">${texto}</p>`, { rol: 'status' }));
         campoCodigo.value = texto;
-        limpiarErrores(formulario);
-        campoCodigo.focus();
-        onQrLeido(texto);
+        if (!buscar(texto)) campoCodigo.focus();
       },
     });
 
@@ -108,11 +99,11 @@ export default {
     };
 
     botonEscanear.addEventListener('click', async () => {
+      limpiarErrores(formulario);
       pintar(mensaje, '');
       const problema = problemaDeSoporte();
       if (problema) {
         mostrarErrorCamara(problema);
-        campoCodigo.focus();
         return;
       }
       botonEscanear.hidden = true;
@@ -121,10 +112,9 @@ export default {
       formulario.querySelector('[data-cancelar]').focus();
       try {
         await escaner.iniciar();
-        if (escaner.activo) estado.textContent = 'Pon el código QR dentro del recuadro. Se lee solo.';
+        if (escaner.activo) estado.textContent = 'Pon el QR del área dentro del recuadro. Se lee solo.';
       } catch (error) {
-        mostrarErrorCamara(error.name === 'ErrorCamara' ? error : { message: 'No se pudo abrir la cámara. Puedes escribir el código a mano.' });
-        campoCodigo.focus();
+        mostrarErrorCamara(error.name === 'ErrorCamara' ? error : { message: 'No se pudo abrir la cámara. Puedes escribir el código del área.' });
       }
     });
 
@@ -133,21 +123,19 @@ export default {
       botonEscanear.focus();
     });
 
-    // Si la persona cambia de pestaña o sale de la página, la cámara no se queda encendida.
     const alOcultar = () => { if (!visor.hidden) cerrarVisor(); };
     document.addEventListener('visibilitychange', () => { if (document.hidden) alOcultar(); });
     window.addEventListener('pagehide', alOcultar);
 
     formulario.addEventListener('submit', (e) => {
       e.preventDefault();
-      validar(formulario.elements.codigo.value.trim());
+      buscar(campoCodigo.value.trim());
     });
 
-    // El QR puede abrir directamente acceso.html?codigo=XXXX
     const codigoEnEnlace = consulta.get('codigo');
     if (codigoEnEnlace) {
-      formulario.elements.codigo.value = codigoEnEnlace;
-      validar(codigoEnEnlace.trim());
+      campoCodigo.value = codigoEnEnlace;
+      buscar(codigoEnEnlace.trim());
     }
   },
 };
